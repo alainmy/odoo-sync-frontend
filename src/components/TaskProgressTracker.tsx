@@ -40,11 +40,12 @@ export default function TaskProgressTracker({
       return response.data
     },
     enabled: isActive && !!taskId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Stop polling if task is complete
+      const data = query.state.data
       if (
         data &&
-        ['SUCCESS', 'FAILURE', 'REVOKED'].includes(data.db_status)
+        ['SUCCESS', 'FAILURE', 'REVOKED'].includes(data.celery_state)
       ) {
         setIsActive(false)
         return false
