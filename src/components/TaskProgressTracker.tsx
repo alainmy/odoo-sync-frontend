@@ -44,7 +44,7 @@ export default function TaskProgressTracker({
       // Stop polling if task is complete
       if (
         data &&
-        ['SUCCESS', 'FAILURE', 'REVOKED'].includes(data.status)
+        ['SUCCESS', 'FAILURE', 'REVOKED'].includes(data.db_status)
       ) {
         setIsActive(false)
         return false
