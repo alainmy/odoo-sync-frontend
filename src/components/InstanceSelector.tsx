@@ -37,7 +37,6 @@ export function InstanceSelector() {
 
   const fetchInstances = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await api.get('/api/v1/instances');
       setInstances(response.data);
       
@@ -61,7 +60,6 @@ export function InstanceSelector() {
     }
 
     try {
-      const token = localStorage.getItem('token');
       await api.patch(
         `/api/v1/instances/${instance.id}/activate`
       );

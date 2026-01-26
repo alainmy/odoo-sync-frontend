@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -44,7 +44,7 @@ export default function TaskProgressTracker({
       // Stop polling if task is complete
       if (
         data &&
-        ['SUCCESS', 'FAILURE', 'REVOKED'].includes(data.celery_state)
+        ['SUCCESS', 'FAILURE', 'REVOKED'].includes(data.status)
       ) {
         setIsActive(false)
         return false

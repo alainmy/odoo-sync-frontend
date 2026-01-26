@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -63,7 +63,6 @@ export default function Instances() {
   const fetchInstances = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const response = await api.get('/api/v1/instances');
       setInstances(response.data);
     } catch (error) {
@@ -81,7 +80,6 @@ export default function Instances() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
       
       if (editingInstance) {
         // Actualizar
@@ -124,7 +122,6 @@ export default function Instances() {
     if (!confirm('¿Estás seguro de eliminar esta instancia?')) return;
 
     try {
-      const token = localStorage.getItem('token');
       await api.delete(`/api/v1/instances/${id}`);
       toast({
         title: 'Éxito',
@@ -143,7 +140,6 @@ export default function Instances() {
 
   const handleActivate = async (id: number) => {
     try {
-      const token = localStorage.getItem('token');
       await api.patch(
         `/api/v1/instances/${id}/activate`
       );

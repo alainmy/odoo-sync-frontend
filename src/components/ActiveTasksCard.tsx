@@ -2,10 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { Activity, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
-import { format } from 'date-fns'
+import { Activity, Clock } from 'lucide-react'
 
 interface ActiveTask {
   id: string

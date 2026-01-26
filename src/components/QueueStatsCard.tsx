@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Layers, TrendingUp } from 'lucide-react'
+import { Layers } from 'lucide-react'
 
 interface QueueStats {
   queues: Record<string, { reserved: number; scheduled: number }>
