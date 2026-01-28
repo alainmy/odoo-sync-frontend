@@ -20,7 +20,7 @@ interface TaskSummaryStats {
     pending: number
   }
   task_breakdown: Record<string, number>
-  average_duration_seconds: number
+  average_duration_seconds: number | null
   total_tasks: number
 }
 
@@ -39,8 +39,10 @@ export default function TaskStatsCard() {
   })
 
   const successRate = data
-    ? ((data.status_breakdown.success / data.total_tasks) * 100).toFixed(1)
-    : 0
+    ? data.total_tasks > 0
+      ? ((data.status_breakdown.success / data.total_tasks) * 100).toFixed(1)
+      : '0.0'
+    : '0.0'
 
   return (
     <Card>
@@ -124,7 +126,9 @@ export default function TaskStatsCard() {
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">Avg Duration</span>
                 <span className="text-sm font-mono">
-                  {data.average_duration_seconds.toFixed(1)}s
+                  {data.average_duration_seconds !== null
+                    ? `${data.average_duration_seconds.toFixed(1)}s`
+                    : '—'}
                 </span>
               </div>
             </div>
