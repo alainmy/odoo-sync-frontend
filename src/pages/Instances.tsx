@@ -9,22 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '../lib/api';
-
-interface WooCommerceInstance {
-  id: number;
-  name: string;
-  woocommerce_url: string;
-  woocommerce_consumer_key: string;
-  woocommerce_consumer_secret: string;
-  odoo_url: string;
-  odoo_db: string;
-  odoo_username: string;
-  odoo_password: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string | null;
-  user_id: number;
-}
+import { useInstanceStore, WooCommerceInstance } from '@/stores/instanceStore';
 
 interface FormData {
   name: string;
@@ -39,8 +24,7 @@ interface FormData {
 }
 
 export default function Instances() {
-  const [instances, setInstances] = useState<WooCommerceInstance[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { instances, isLoading, fetchInstances, activateInstance } = useInstanceStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingInstance, setEditingInstance] = useState<WooCommerceInstance | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -58,24 +42,7 @@ export default function Instances() {
 
   useEffect(() => {
     fetchInstances();
-  }, []);
-
-  const fetchInstances = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get('/api/v1/instances');
-      setInstances(response.data);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Error al cargar las instancias',
-        variant: 'destructive'
-      });
-      console.error('Error fetching instances:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchInstances]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,16 +107,11 @@ export default function Instances() {
 
   const handleActivate = async (id: number) => {
     try {
-      await api.patch(
-        `/api/v1/instances/${id}/activate`
-      );
+      await activateInstance(id);
       toast({
         title: 'Éxito',
         description: 'Instancia activada correctamente'
       });
-      // Guardar en localStorage para uso global
-      localStorage.setItem('active_instance_id', id.toString());
-      fetchInstances();
     } catch (error) {
       toast({
         title: 'Error',
@@ -345,7 +307,7 @@ export default function Instances() {
         </Dialog>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <Card>
           <CardContent className="py-10">
             <p className="text-center text-muted-foreground">Cargando instancias...</p>

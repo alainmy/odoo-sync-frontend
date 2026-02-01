@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
+import { useInstanceStore } from '@/stores/instanceStore';
 
 interface WebhookConfig {
   id: number;
@@ -56,7 +57,8 @@ const WEBHOOK_TOPICS = [
 ];
 
 export default function WebhooksManagement() {
-  const instanceId = parseInt(localStorage.getItem('active_instance_id') || '1');
+  const { activeInstance } = useInstanceStore();
+  const instanceId = activeInstance?.id || 0;
   const [webhooks, setWebhooks] = useState<WebhookConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);

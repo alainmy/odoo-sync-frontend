@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import api from '@/lib/api';
+import { useInstanceStore } from '@/stores/instanceStore';
 
 interface PricelistSync {
   id: number;
@@ -42,7 +43,8 @@ interface FormData {
 }
 
 export default function PricelistsSync() {
-  const instanceId = parseInt(localStorage.getItem('active_instance_id') || '1');
+  const { activeInstance } = useInstanceStore();
+  const instanceId = activeInstance?.id || 0;
   const [configs, setConfigs] = useState<PricelistSync[]>([]);
   const [odooPricelists, setOdooPricelists] = useState<OdooPricelist[]>([]);
   const [loading, setLoading] = useState(true);

@@ -14,69 +14,39 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
-import { api } from '../lib/api';
-
-interface WooCommerceInstance {
-  id: number;
-  name: string;
-  woocommerce_url: string;
-  odoo_url: string;
-  is_active: boolean;
-}
+import { useInstanceStore } from '@/stores/instanceStore';
 
 export function InstanceSelector() {
   const [open, setOpen] = useState(false);
-  const [instances, setInstances] = useState<WooCommerceInstance[]>([]);
-  const [activeInstance, setActiveInstance] = useState<WooCommerceInstance | null>(null);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  
+  const { 
+    activeInstance, 
+    instances, 
+    isLoading, 
+    fetchInstances,
+    activateInstance 
+  } = useInstanceStore();
 
   useEffect(() => {
     fetchInstances();
-  }, []);
+  }, [fetchInstances]);
 
-  const fetchInstances = async () => {
-    try {
-      const response = await api.get('/api/v1/instances');
-      setInstances(response.data);
-      
-      // Find active instance
-      const active = response.data.find((i: WooCommerceInstance) => i.is_active);
-      if (active) {
-        setActiveInstance(active);
-        localStorage.setItem('active_instance_id', active.id.toString());
-      }
-    } catch (error) {
-      console.error('Error fetching instances:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSelectInstance = async (instance: WooCommerceInstance) => {
-    if (instance.id === activeInstance?.id) {
+  const handleSelectInstance = async (instanceId: number, instanceName: string) => {
+    if (instanceId === activeInstance?.id) {
       setOpen(false);
       return;
     }
 
     try {
-      await api.patch(
-        `/api/v1/instances/${instance.id}/activate`
-      );
-
-      setActiveInstance(instance);
-      localStorage.setItem('active_instance_id', instance.id.toString());
+      await activateInstance(instanceId);
       setOpen(false);
 
       toast({
         title: 'Instancia activada',
-        description: `Ahora estás trabajando con: ${instance.name}`
+        description: `Ahora estás trabajando con: ${instanceName}`
       });
 
-      // Recargar la página para actualizar todos los datos
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
     } catch (error) {
       toast({
         title: 'Error',
@@ -87,7 +57,7 @@ export function InstanceSelector() {
     }
   };
 
-  if (loading) {
+  if (isLoading && !activeInstance) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
         <Server className="h-4 w-4" />
@@ -130,7 +100,7 @@ export function InstanceSelector() {
               <CommandItem
                 key={instance.id}
                 value={instance.name}
-                onSelect={() => handleSelectInstance(instance)}
+                onSelect={() => handleSelectInstance(instance.id, instance.name)}
               >
                 <Check
                   className={`mr-2 h-4 w-4 ${
