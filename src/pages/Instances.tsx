@@ -10,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '../lib/api';
 import { useInstanceStore, WooCommerceInstance } from '@/stores/instanceStore';
-import { Select, SelectContent, SelectItem, SelectTrig, SelectTrigger, SelectValue, } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
 
 interface FormData {
   name: string;
