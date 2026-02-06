@@ -51,7 +51,7 @@ export default function OdooCategoriesSync() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const pageSize = 50;
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -62,14 +62,24 @@ export default function OdooCategoriesSync() {
     queryFn: async () => {
       const params = new URLSearchParams({
         limit: pageSize.toString(),
-        offset: (page * pageSize).toString(),
+        offset: (page).toString(),
       });
       
       if (search) params.append('search', search);
       if (filterStatus !== 'all') params.append('filter_status', filterStatus);
-
-      const response = await api.get(`/api/v1/category-tag-management/categories?${params}`);
-      return response.data;
+      try{
+        const response = await api.get(`/api/v1/category-tag-management/categories?${params}`);
+        return response.data;
+      }
+      catch (error: any) {
+        console.error('Error fetching categories:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error fetching categories',
+          description: error.response?.data?.detail || 'Failed to fetch categories',
+        });
+        throw error;
+      }
     },
     refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
@@ -229,14 +239,14 @@ export default function OdooCategoriesSync() {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
-                  setPage(0);
+                  setPage(1);
                 }}
                 className="pl-9"
               />
             </div>
             <Select value={filterStatus} onValueChange={(value) => {
               setFilterStatus(value);
-              setPage(0);
+              setPage(1);
             }}>
               <SelectTrigger className="w-[200px]">
                 <Filter className="h-4 w-4 mr-2" />
@@ -339,8 +349,8 @@ export default function OdooCategoriesSync() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage(p => Math.max(0, p - 1))}
-                    disabled={page === 0}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
                   >
                     Previous
                   </Button>
@@ -348,7 +358,7 @@ export default function OdooCategoriesSync() {
                     variant="outline"
                     size="sm"
                     onClick={() => setPage(p => p + 1)}
-                    disabled={(page + 1) * pageSize >= totalCount}
+                    disabled={page * pageSize >= totalCount}
                   >
                     Next
                   </Button>

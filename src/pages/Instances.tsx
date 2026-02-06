@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '../lib/api';
 import { useInstanceStore, WooCommerceInstance } from '@/stores/instanceStore';
+import { Select, SelectContent, SelectItem, SelectTrig, SelectTrigger, SelectValue, } from '@/components/ui/select';
 
 interface FormData {
   name: string;
@@ -21,10 +22,11 @@ interface FormData {
   odoo_username: string;
   odoo_password: string;
   is_active: boolean;
+  odoo_language: string;
 }
 
 export default function Instances() {
-  const { instances, isLoading, fetchInstances, activateInstance } = useInstanceStore();
+  const { instances, isLoading, fetchInstances, activateInstance, languages,fetchLanguages } = useInstanceStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingInstance, setEditingInstance] = useState<WooCommerceInstance | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -36,18 +38,20 @@ export default function Instances() {
     odoo_db: '',
     odoo_username: '',
     odoo_password: '',
-    is_active: false
+    is_active: false,
+    odoo_language: 'en_US'
   });
   const { toast } = useToast();
 
   useEffect(() => {
     fetchInstances();
-  }, [fetchInstances]);
+    fetchLanguages();
+  }, [fetchInstances, fetchLanguages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      
+
       if (editingInstance) {
         // Actualizar
         await api.put(
@@ -76,7 +80,7 @@ export default function Instances() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: editingInstance 
+        description: editingInstance
           ? 'Error al actualizar la instancia'
           : 'Error al crear la instancia',
         variant: 'destructive'
@@ -123,6 +127,7 @@ export default function Instances() {
   };
 
   const openEditDialog = (instance: WooCommerceInstance) => {
+    console.log('Editing instance:', instance);
     setEditingInstance(instance);
     setFormData({
       name: instance.name,
@@ -133,7 +138,8 @@ export default function Instances() {
       odoo_db: instance.odoo_db,
       odoo_username: instance.odoo_username,
       odoo_password: instance.odoo_password,
-      is_active: instance.is_active
+      is_active: instance.is_active,
+      odoo_language: instance.odoo_language
     });
     setIsDialogOpen(true);
   };
@@ -149,7 +155,8 @@ export default function Instances() {
       odoo_db: '',
       odoo_username: '',
       odoo_password: '',
-      is_active: false
+      is_active: false,
+      odoo_language: 'en_US'
     });
   };
 
@@ -273,6 +280,24 @@ export default function Instances() {
                       required
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="odoo_language">Language</Label>
+                    <Select
+                      value={formData.odoo_language}
+                      onValueChange={(value) => setFormData({ ...formData, odoo_language: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar idioma" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {languages.map((lang) => (
+                          <SelectItem  key={lang.code} value={lang.code}>
+                            {lang.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div> 
                 </div>
               </div>
 

@@ -61,14 +61,24 @@ export default function OdooProductsSync() {
     queryFn: async () => {
       const params = new URLSearchParams({
         limit: pageSize.toString(),
-        offset: (page * pageSize).toString(),
+        offset: (page).toString(),
       });
       
       if (search) params.append('search', search);
       if (filterStatus !== 'all') params.append('filter_status', filterStatus);
+      try{
 
-      const response = await api.get(`/api/v1/sync-management/products?${params}`);
-      return response.data;
+        const response = await api.get(`/api/v1/sync-management/products?${params}`);
+        return response.data;
+      } catch (error: any) {
+        console.error('Error fetching products:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error fetching products',
+          description: error.response?.data?.detail || 'Failed to fetch products',
+        });
+        throw error;
+      }
     },
     staleTime: 5000, // Consider data fresh for 5 seconds
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
