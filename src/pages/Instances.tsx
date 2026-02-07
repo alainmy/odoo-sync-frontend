@@ -23,6 +23,7 @@ interface FormData {
   odoo_password: string;
   is_active: boolean;
   odoo_language: string;
+  product_descriptions: string;
 }
 
 export default function Instances() {
@@ -39,7 +40,8 @@ export default function Instances() {
     odoo_username: '',
     odoo_password: '',
     is_active: false,
-    odoo_language: 'en_US'
+    odoo_language: 'en_US',
+    product_descriptions: 'sale_description'
   });
   const { toast } = useToast();
 
@@ -139,7 +141,8 @@ export default function Instances() {
       odoo_username: instance.odoo_username,
       odoo_password: instance.odoo_password,
       is_active: instance.is_active,
-      odoo_language: instance.odoo_language
+      odoo_language: instance.odoo_language,
+      product_descriptions: instance.product_descriptions
     });
     setIsDialogOpen(true);
   };
@@ -156,7 +159,8 @@ export default function Instances() {
       odoo_username: '',
       odoo_password: '',
       is_active: false,
-      odoo_language: 'en_US'
+      odoo_language: 'en_US',
+      product_descriptions: 'sale_description'
     });
   };
 
@@ -295,6 +299,25 @@ export default function Instances() {
                             {lang.name}
                           </SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+                  </div> 
+                  <div className="space-y-2">
+                    <Label htmlFor="product_descriptions">Descripción del producto</Label>
+                    <Select
+                      value={formData.product_descriptions}
+                      onValueChange={(value) => setFormData({ ...formData, product_descriptions: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar descripción del producto" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sale_description">
+                          Descripción de venta (sale_description)
+                        </SelectItem>
+                        <SelectItem value="product_descriptions">
+                          Descripción del producto (product_descriptions)
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div> 

@@ -18,6 +18,7 @@ export interface WooCommerceInstance {
   updated_at: string | null;
   user_id: number;
   odoo_language: string;
+  product_descriptions: string;
 }
 export interface Language {
   code: string;
