@@ -60,7 +60,7 @@ export default function OdooTagsSync() {
     queryFn: async () => {
       const params = new URLSearchParams({
         limit: pageSize.toString(),
-        offset: (page * pageSize).toString(),
+        offset: (page).toString(),
       });
       
       if (search) params.append('search', search);

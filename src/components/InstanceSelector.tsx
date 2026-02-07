@@ -43,14 +43,14 @@ export function InstanceSelector() {
       setOpen(false);
 
       toast({
-        title: 'Instancia activada',
-        description: `Ahora estás trabajando con: ${instanceName}`
+        title: 'Instance Activated',
+        description: `Now you are working with: ${instanceName}`
       });
 
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'No se pudo activar la instancia',
+        description: 'Failed to activate instance',
         variant: 'destructive'
       });
       console.error('Error activating instance:', error);
@@ -61,7 +61,7 @@ export function InstanceSelector() {
     return (
       <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
         <Server className="h-4 w-4" />
-        Cargando...
+        Loading...
       </div>
     );
   }
@@ -70,7 +70,7 @@ export function InstanceSelector() {
     return (
       <div className="flex items-center gap-2 px-3 py-2 text-sm text-destructive">
         <Server className="h-4 w-4" />
-        Sin instancia activa
+        No active instance
       </div>
     );
   }
@@ -94,7 +94,7 @@ export function InstanceSelector() {
       <PopoverContent className="w-[280px] p-0">
         <Command>
           <CommandInput placeholder="Buscar instancia..." />
-          <CommandEmpty>No se encontraron instancias.</CommandEmpty>
+          <CommandEmpty>No instances found.</CommandEmpty>
           <CommandGroup>
             {instances.map((instance) => (
               <CommandItem

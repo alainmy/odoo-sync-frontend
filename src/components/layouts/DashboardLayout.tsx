@@ -38,35 +38,35 @@ const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
   {
     icon: RefreshCw,
-    label: 'Sincronización',
+    label: 'Synchronization',
     children: [
-      { icon: Package, label: 'Productos', path: '/products' },
-      { icon: FolderTree, label: 'Categorías', path: '/categories' },
+      { icon: Package, label: 'Products', path: '/products' },
+      { icon: FolderTree, label: 'Categories', path: '/categories' },
       { icon: Tags, label: 'Tags', path: '/tags' },
-      { icon: Sliders, label: 'Atributos', path: '/attributes' },
-      { icon: DollarSign, label: 'Listas de Precios', path: '/pricelists' },
+      { icon: Sliders, label: 'Attributes', path: '/attributes' },
+      { icon: DollarSign, label: 'Price Lists', path: '/pricelists' },
     ],
   },
   {
     icon: Database,
     label: 'Odoo',
     children: [
-      { icon: Package, label: 'Productos', path: '/odoo-products' },
-      { icon: FolderTree, label: 'Categorías', path: '/odoo-categories' },
+      { icon: Package, label: 'Products', path: '/odoo-products' },
+      { icon: FolderTree, label: 'Categories', path: '/odoo-categories' },
       { icon: Tags, label: 'Tags', path: '/odoo-tags' },
-      { icon: Sliders, label: 'Atributos', path: '/odoo-attributes' },
+      { icon: Sliders, label: 'Attributes', path: '/odoo-attributes' },
     ],
   },
   {
     icon: Webhook,
     label: 'Webhooks',
     children: [
-      { icon: Webhook, label: 'Gestión', path: '/webhooks-management' },
+      { icon: Webhook, label: 'Management', path: '/webhooks-management' },
       { icon: Webhook, label: 'Logs', path: '/webhooks' },
     ],
   },
   { icon: ListChecks, label: 'Tasks', path: '/tasks' },
-  { icon: Server, label: 'Instancias', path: '/instances' },
+  { icon: Server, label: 'Instances', path: '/instances' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ]
 
@@ -176,7 +176,7 @@ export default function DashboardLayout() {
       <main className="flex-1 bg-background overflow-auto">
         <div className="border-b border-border bg-card p-4">
           <div className="container mx-auto flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Instancia activa</h2>
+            <h2 className="text-lg font-semibold">Active Instance</h2>
             <InstanceSelector />
           </div>
         </div>

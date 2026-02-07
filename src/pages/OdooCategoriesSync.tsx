@@ -51,7 +51,7 @@ export default function OdooCategoriesSync() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
   const pageSize = 50;
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -239,14 +239,14 @@ export default function OdooCategoriesSync() {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
-                  setPage(1);
+                  setPage(0);
                 }}
                 className="pl-9"
               />
             </div>
             <Select value={filterStatus} onValueChange={(value) => {
               setFilterStatus(value);
-              setPage(1);
+              setPage(0);
             }}>
               <SelectTrigger className="w-[200px]">
                 <Filter className="h-4 w-4 mr-2" />
@@ -349,8 +349,8 @@ export default function OdooCategoriesSync() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
+                    onClick={() => setPage(p => Math.max(0, p - 1))}
+                    disabled={page === 0}
                   >
                     Previous
                   </Button>
