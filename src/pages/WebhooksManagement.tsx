@@ -439,11 +439,11 @@ export default function WebhooksManagement() {
                       {webhook.wc_webhook_id ? 'Update in WC' : 'Sync to WC'}
                     </Button>
 
-                    <Button
+                                        <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleTestWebhook(webhook.delivery_url)}
-                      disabled={testingUrl === webhook.delivery_url}
+                      onClick={() => webhook.delivery_url && handleTestWebhook(webhook.delivery_url)}
+                      disabled={testingUrl === webhook.delivery_url || !webhook.delivery_url}
                     >
                       <PlayCircle className="mr-1 h-3 w-3" />
                       {testingUrl === webhook.delivery_url ? 'Testing...' : 'Test'}
