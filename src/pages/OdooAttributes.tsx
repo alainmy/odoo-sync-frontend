@@ -62,7 +62,8 @@ export default function OdooAttributes() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [page, setPage] = useState(0);
   const [expandedAttribute, setExpandedAttribute] = useState<number | null>(null);
-  const pageSize = 50;
+  // const pageSize = 50;
+  const [pageSize, setPageSize] = useState(50);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -74,7 +75,7 @@ export default function OdooAttributes() {
         limit: pageSize.toString(),
         offset: (page).toString(),
       });
-      
+
       if (search) params.append('search', search);
       if (filterStatus !== 'all') params.append('filter_status', filterStatus);
 
@@ -125,7 +126,7 @@ export default function OdooAttributes() {
 
   const toggleSelectAll = () => {
     if (!data?.attributes) return;
-    
+
     if (selectedIds.length === data.attributes.length) {
       setSelectedIds([]);
     } else {
@@ -244,6 +245,20 @@ export default function OdooAttributes() {
                 className="pl-9"
               />
             </div>
+            <Select value={pageSize.toString()} onValueChange={(value) => {
+              setPageSize(parseInt(value));
+              setPage(0);
+            }}>
+              <SelectTrigger className="w-[200px]">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Items per page" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="25">25 per page</SelectItem>
+                <SelectItem value="50">50 per page</SelectItem>
+                <SelectItem value="100">100 per page</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={filterStatus} onValueChange={(value) => {
               setFilterStatus(value);
               setPage(0);

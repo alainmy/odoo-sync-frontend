@@ -19,19 +19,25 @@ export interface WooCommerceInstance {
   user_id: number;
   odoo_language: string;
   product_descriptions: string;
+  price_list_id: number | null;
 }
 export interface Language {
   code: string;
   name: string;
+}
+export interface PriceList {
+  id: number;
+  odoo_pricelist_name: string;
 }
 
 interface InstanceState {
   activeInstance: WooCommerceInstance | null;
   instances: WooCommerceInstance[];
   languages: Language[];
+  price_list: PriceList[]; // Consider defining a proper interface for price list items
   isLoading: boolean;
   error: string | null;
-
+  
   // Actions
   setActiveInstance: (instance: WooCommerceInstance) => void;
   setInstances: (instances: WooCommerceInstance[]) => void;
@@ -40,6 +46,7 @@ interface InstanceState {
   activateInstance: (id: number) => Promise<void>;
   clearInstances: () => void;
   fetchLanguages: () => Promise<void>;
+  fetchPriceList: () => Promise<void>;
 }
 
 export const useInstanceStore = create<InstanceState>()(
@@ -50,6 +57,7 @@ export const useInstanceStore = create<InstanceState>()(
       isLoading: false,
       error: null,
       languages: [],
+      price_list: [],
 
       setActiveInstance: (instance) => {
         set({ activeInstance: instance });
@@ -80,6 +88,25 @@ export const useInstanceStore = create<InstanceState>()(
           toast({
             title: 'Error',
             description: 'Failed to load languages from Odoo',
+            variant: 'destructive'
+          });
+        }
+      },
+      fetchPriceList: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await api.get(`/api/v1/pricelists/config?instance_id=${get().activeInstance?.id || 0}&active_only=true`);
+          const price_list = response.data;
+          set({ isLoading: false, price_list });
+        } catch (error: any) {
+          console.error('Error fetching price lists:', error);
+          set({
+            error: error.response?.data?.detail || 'Error al cargar listas de precios',
+            isLoading: false
+          });
+          toast({
+            title: 'Error',
+            description: 'Failed to load price lists from Odoo',
             variant: 'destructive'
           });
         }

@@ -7,6 +7,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from '@/components/ui/command';
 import {
   Popover,
@@ -19,20 +20,23 @@ import { useInstanceStore } from '@/stores/instanceStore';
 export function InstanceSelector() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  
-  const { 
-    activeInstance, 
-    instances, 
-    isLoading, 
+
+  const {
+    activeInstance,
+    instances,
+    isLoading,
     fetchInstances,
-    activateInstance 
+    activateInstance
   } = useInstanceStore();
 
   useEffect(() => {
     fetchInstances();
+    console.log('Fetched instances:', activeInstance);
   }, [fetchInstances]);
 
   const handleSelectInstance = async (instanceId: number, instanceName: string) => {
+    console.log('Selected instance ID:', instanceId);
+    console.log('Current active instance ID:', activeInstance?.id);
     if (instanceId === activeInstance?.id) {
       setOpen(false);
       return;
@@ -41,7 +45,7 @@ export function InstanceSelector() {
     try {
       await activateInstance(instanceId);
       setOpen(false);
-
+      window.location.reload(); // Recargar la página para reflejar el cambio de instancia
       toast({
         title: 'Instance Activated',
         description: `Now you are working with: ${instanceName}`
@@ -94,28 +98,35 @@ export function InstanceSelector() {
       <PopoverContent className="w-[280px] p-0">
         <Command>
           <CommandInput placeholder="Buscar instancia..." />
-          <CommandEmpty>No instances found.</CommandEmpty>
-          <CommandGroup>
-            {instances.map((instance) => (
-              <CommandItem
-                key={instance.id}
-                value={instance.name}
-                onSelect={() => handleSelectInstance(instance.id, instance.name)}
-              >
-                <Check
-                  className={`mr-2 h-4 w-4 ${
-                    instance.id === activeInstance?.id ? 'opacity-100' : 'opacity-0'
-                  }`}
-                />
-                <div className="flex flex-col flex-1 min-w-0">
-                  <span className="font-medium truncate">{instance.name}</span>
-                  <span className="text-xs text-muted-foreground truncate">
-                    {instance.woocommerce_url}
-                  </span>
+          {instances.length === 0 && (
+            <CommandEmpty>No instances found.</CommandEmpty>
+          )}
+          <CommandList>
+            <CommandGroup>
+              {instances.map((instance) => (
+                <div
+                  className="flex items-center w-full cursor-pointer"
+                  onClick={() => {
+                    handleSelectInstance(instance.id, instance.name)
+                    setOpen(false)
+                  }}
+                >
+                  <Check
+                    className={`mr-2 h-4 w-4 ${instance.id === Number(activeInstance?.id)
+                        ? 'opacity-100'
+                        : 'opacity-0'
+                      }`}
+                  />
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <span className="font-medium truncate">{instance.name}</span>
+                    <span className="text-xs text-muted-foreground truncate">
+                      {instance.woocommerce_url}
+                    </span>
+                  </div>
                 </div>
-              </CommandItem>
-            ))}
-          </CommandGroup>
+              ))}
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>

@@ -16,7 +16,7 @@ interface WebhookConfig {
   id: number;
   instance_id: number;
   topic: string;
-  delivery_url: string;
+  delivery_url: string | null;
   name: string | null;
   secret: string | null;
   wc_webhook_id: number | null;
@@ -98,11 +98,11 @@ export default function WebhooksManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.topic || !formData.delivery_url) {
+    if (!formData.topic) {
       toast({
         variant: 'destructive',
         title: 'Validation Error',
-        description: 'Topic and delivery URL are required',
+        description: 'Topic is required',
       });
       return;
     }
@@ -140,7 +140,7 @@ export default function WebhooksManagement() {
     setEditingWebhook(webhook);
     setFormData({
       topic: webhook.topic,
-      delivery_url: webhook.delivery_url,
+      delivery_url: webhook?.delivery_url || null || '',
       name: webhook.name || '',
       secret: webhook.secret || '',
       status: webhook.status,
@@ -289,15 +289,14 @@ export default function WebhooksManagement() {
                   </Select>
                 </div>
 
-                <div>
+                <div hidden={!editingWebhook}>
                   <Label htmlFor="delivery_url">Delivery URL *</Label>
                   <Input
                     id="delivery_url"
                     type="url"
                     placeholder="https://your-app.com/webhook"
-                    value={formData.delivery_url}
-                    onChange={(e) => setFormData({ ...formData, delivery_url: e.target.value })}
-                    required
+                    value={formData.delivery_url || ''}
+                    readOnly={true} // No se puede editar la URL de entrega después de la creación
                   />
                 </div>
 

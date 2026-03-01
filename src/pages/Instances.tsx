@@ -24,10 +24,13 @@ interface FormData {
   is_active: boolean;
   odoo_language: string;
   product_descriptions: string;
+  price_list_id: number | null;
 }
 
 export default function Instances() {
-  const { instances, isLoading, fetchInstances, activateInstance, languages,fetchLanguages } = useInstanceStore();
+  const { instances, isLoading, fetchInstances,
+    activateInstance, 
+    languages,fetchLanguages, price_list, fetchPriceList } = useInstanceStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingInstance, setEditingInstance] = useState<WooCommerceInstance | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -41,14 +44,16 @@ export default function Instances() {
     odoo_password: '',
     is_active: false,
     odoo_language: 'en_US',
-    product_descriptions: 'sale_description'
+    product_descriptions: 'sale_description',
+    price_list_id: null
   });
   const { toast } = useToast();
 
   useEffect(() => {
     fetchInstances();
     fetchLanguages();
-  }, [fetchInstances, fetchLanguages]);
+    fetchPriceList();
+  }, [fetchInstances, fetchLanguages, fetchPriceList]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +147,8 @@ export default function Instances() {
       odoo_password: instance.odoo_password,
       is_active: instance.is_active,
       odoo_language: instance.odoo_language,
-      product_descriptions: instance.product_descriptions
+      product_descriptions: instance.product_descriptions,
+      price_list_id: instance.price_list_id
     });
     setIsDialogOpen(true);
   };
@@ -160,7 +166,8 @@ export default function Instances() {
       odoo_password: '',
       is_active: false,
       odoo_language: 'en_US',
-      product_descriptions: 'sale_description'
+      product_descriptions: 'sale_description',
+      price_list_id: null
     });
   };
 
@@ -297,6 +304,25 @@ export default function Instances() {
                         {languages.map((lang) => (
                           <SelectItem  key={lang.code} value={lang.code}>
                             {lang.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div> 
+                  <div className="space-y-2">
+                    <Label htmlFor="price_list_id">Lista de precios</Label>
+                    <Select
+                      value={formData.price_list_id?.toString() || ''}
+                      onValueChange={(value) => setFormData({ ...formData, price_list_id: parseInt(value) || null })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar lista de precios" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Sin lista de precios</SelectItem>
+                        {price_list.map((pl) => (
+                          <SelectItem  key={pl.id} value={pl.id.toString()}>
+                            {pl.odoo_pricelist_name}
                           </SelectItem>
                         ))}
                       </SelectContent>

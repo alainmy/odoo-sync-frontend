@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw, Search, Filter } from 'lucide-react';
+import { Loader2, RefreshCw, Search,Sliders, Filter } from 'lucide-react';
 
 interface ProductSyncStatus {
   odoo_id: number;
@@ -38,6 +38,14 @@ interface ProductListResponse {
   };
 }
 
+interface SyncStatsResponse {
+  total_products: number;
+  synced: number;
+  never_synced: number;
+  modifed: number;
+  errors: number;
+}
+
 const statusVariants = {
   never_synced: { variant: 'secondary' as const, label: 'Never Synced' },
   synced: { variant: 'success' as const, label: 'Synced' },
@@ -55,6 +63,15 @@ export default function OdooProductsSync() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Fetch statistics
+  const { data: stats } = useQuery<SyncStatsResponse>({
+    queryKey: ['attribute-sync-stats'],
+    queryFn: async () => {
+      const response = await api.get('/api/v1/sync-management/statistics');
+      return response.data;
+    },
+    refetchInterval: 30000,
+  });
   // Fetch products with sync status
   const { data, isLoading, refetch, isFetching } = useQuery<ProductListResponse>({
     queryKey: ['odoo-products-sync', search, filterStatus, page, pageSize],
@@ -63,10 +80,10 @@ export default function OdooProductsSync() {
         limit: pageSize.toString(),
         offset: (page).toString(),
       });
-      
+
       if (search) params.append('search', search);
       if (filterStatus !== 'all') params.append('filter_status', filterStatus);
-      try{
+      try {
 
         const response = await api.get(`/api/v1/sync-management/products?${params}`);
         return response.data;
@@ -123,7 +140,7 @@ export default function OdooProductsSync() {
 
   const toggleSelectAll = () => {
     if (!data?.products) return;
-    
+
     if (selectedIds.length === data.products.length) {
       setSelectedIds([]);
     } else {
@@ -159,9 +176,9 @@ export default function OdooProductsSync() {
   const totalCount = data?.total_count || 0;
 
   // Debug logging
-  console.log('Products data:', { 
-    totalCount, 
-    pageSize, 
+  console.log('Products data:', {
+    totalCount,
+    pageSize,
     productsLength: products.length,
     showPagination: totalCount > 0
   });
@@ -185,7 +202,47 @@ export default function OdooProductsSync() {
           Refresh
         </Button>
       </div>
-
+      {/* Statistics Cards */}
+      {stats && (
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+              <Sliders className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.total_products}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Synced</CardTitle>
+              <div className="h-3 w-3 rounded-full bg-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.synced}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Never Synced</CardTitle>
+              <div className="h-3 w-3 rounded-full bg-gray-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.never_synced}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Errors</CardTitle>
+              <div className="h-3 w-3 rounded-full bg-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.errors}</div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
       <Card>
         <CardHeader>
           <CardTitle>Products</CardTitle>
