@@ -9,7 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw, Search,Sliders, Filter } from 'lucide-react';
+import { Loader2, RefreshCw, Search, Sliders, Filter } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
+import { DialogTitle } from '@radix-ui/react-dialog';
+import { Label } from '@/components/ui/label';
 
 interface ProductSyncStatus {
   odoo_id: number;
@@ -46,6 +49,14 @@ interface SyncStatsResponse {
   errors: number;
 }
 
+interface BatchSyncParams {
+  odoo_ids: number[];
+  publishProduct: boolean;
+  force_sync?: boolean;
+  create_if_not_exists?: boolean;
+  update_existing?: boolean;
+}
+
 const statusVariants = {
   never_synced: { variant: 'secondary' as const, label: 'Never Synced' },
   synced: { variant: 'success' as const, label: 'Synced' },
@@ -62,7 +73,8 @@ export default function OdooProductsSync() {
   const [pageSize, setPageSize] = useState(50);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
+  const [publishProduct, setPublishProduct] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   // Fetch statistics
   const { data: stats } = useQuery<SyncStatsResponse>({
     queryKey: ['attribute-sync-stats'],
@@ -105,12 +117,14 @@ export default function OdooProductsSync() {
 
   // Batch sync mutation
   const batchSyncMutation = useMutation({
-    mutationFn: async (odoo_ids: number[]) => {
+    mutationFn: async (params: BatchSyncParams) => {
+      alert(publishProduct);
       const response = await api.post('/api/v1/sync-management/products/batch-sync', {
-        odoo_ids,
+        odoo_ids: params.odoo_ids,
         force_sync: false,
         create_if_not_exists: true,
         update_existing: true,
+        publish_roduct: params.publishProduct
       });
       return response.data;
     },
@@ -163,8 +177,8 @@ export default function OdooProductsSync() {
       });
       return;
     }
-
-    batchSyncMutation.mutate(selectedIds);
+    setIsDialogOpen(true);
+    // batchSyncMutation.mutate(selectedIds);
   };
 
   const formatDate = (dateString: string | null) => {
@@ -313,6 +327,53 @@ export default function OdooProductsSync() {
                 Clear Selection
               </Button>
             )}
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+              setIsDialogOpen(open);
+            }} key={selectedIds.length}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>
+                    Sync Configuration
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  batchSyncMutation.mutate({
+                    odoo_ids: selectedIds,
+                    publishProduct: publishProduct
+                  });
+                  setIsDialogOpen(false);
+                }}>
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="active"
+                        checked={publishProduct}
+                        onCheckedChange={() => setPublishProduct(true)}
+                      />
+                      <Label htmlFor="active" className="cursor-pointer">
+                        Publish or not the products
+                      </Label>
+                    </div>
+
+                  </div>
+                  <div className="flex gap-2 pt-4">
+                    <Button type="submit" className="flex-1">
+                      Sync
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsDialogOpen(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {/* Table */}
