@@ -118,7 +118,6 @@ export default function OdooProductsSync() {
   // Batch sync mutation
   const batchSyncMutation = useMutation({
     mutationFn: async (params: BatchSyncParams) => {
-      alert(publishProduct);
       const response = await api.post('/api/v1/sync-management/products/batch-sync', {
         odoo_ids: params.odoo_ids,
         force_sync: false,
