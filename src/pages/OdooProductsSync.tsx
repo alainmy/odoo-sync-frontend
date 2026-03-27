@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { Loader2, RefreshCw, Search, Sliders, Filter } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { DialogTitle } from '@radix-ui/react-dialog';
 import { Label } from '@/components/ui/label';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 interface ProductSyncStatus {
   odoo_id: number;
@@ -29,6 +30,15 @@ interface ProductSyncStatus {
   error_message: string | null;
 }
 
+interface TagsResponse {
+  name: string;
+  odoo_id: number;
+}
+
+interface TagOption {
+  label: string;
+  value: string;
+}
 interface ProductListResponse {
   total_count: number;
   products: ProductSyncStatus[];
@@ -64,17 +74,43 @@ const statusVariants = {
   error: { variant: 'destructive' as const, label: 'Error' },
 };
 
+
 export default function OdooProductsSync() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]); // Para filtrar productos
+  const [tagOptions, setTagOptions] = useState<TagOption[]>([]);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [page, setPage] = useState(0);
-  // const pageSize = 50;
   const [pageSize, setPageSize] = useState(50);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [publishProduct, setPublishProduct] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    fetchTags();
+  }, []); // Solo ejecutar una vez al montar el componente
+
+  const fetchTags = async () => {
+    try {
+      const response = await api.get(`/api/v1/category-tag-management/tags`);
+      const tags: TagsResponse[] = response.data.tags;
+      // Convertir tags a opciones para el MultiSelect
+      const options: TagOption[] = tags.map(tag => ({
+        label: tag.name,
+        value: tag.odoo_id.toString()
+      }));
+      setTagOptions(options);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to load tags',
+      });
+    }
+  };
+
   // Fetch statistics
   const { data: stats } = useQuery<SyncStatsResponse>({
     queryKey: ['attribute-sync-stats'],
@@ -86,7 +122,7 @@ export default function OdooProductsSync() {
   });
   // Fetch products with sync status
   const { data, isLoading, refetch, isFetching } = useQuery<ProductListResponse>({
-    queryKey: ['odoo-products-sync', search, filterStatus, page, pageSize],
+    queryKey: ['odoo-products-sync', search, filterStatus, selectedTagIds, page, pageSize],
     queryFn: async () => {
       const params = new URLSearchParams({
         limit: pageSize.toString(),
@@ -95,6 +131,10 @@ export default function OdooProductsSync() {
 
       if (search) params.append('search', search);
       if (filterStatus !== 'all') params.append('filter_status', filterStatus);
+      // Agregar tag IDs al filtro
+      if (selectedTagIds.length > 0) {
+        selectedTagIds.forEach(tagId => params.append('tag_ids', tagId));
+      }
       try {
 
         const response = await api.get(`/api/v1/sync-management/products?${params}`);
@@ -115,7 +155,7 @@ export default function OdooProductsSync() {
     refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
-  // Batch sync mutation
+    // Batch sync mutation
   const batchSyncMutation = useMutation({
     mutationFn: async (params: BatchSyncParams) => {
       const response = await api.post('/api/v1/sync-management/products/batch-sync', {
@@ -123,7 +163,7 @@ export default function OdooProductsSync() {
         force_sync: false,
         create_if_not_exists: true,
         update_existing: true,
-        publish_roduct: params.publishProduct
+        publish_product: params.publishProduct
       });
       return response.data;
     },
@@ -265,49 +305,102 @@ export default function OdooProductsSync() {
         </CardHeader>
         <CardContent>
           {/* Filters */}
-          <div className="flex gap-4 mb-6">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or SKU..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(0);
-                }}
-                className="pl-9"
-              />
+          <div className="space-y-4 mb-6">
+            <div className="flex gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or SKU..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(0);
+                  }}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={pageSize.toString()} onValueChange={(value) => {
+                setPageSize(parseInt(value));
+                setPage(0);
+              }}>
+                <SelectTrigger className="w-[200px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Items per page" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="25">25 per page</SelectItem>
+                  <SelectItem value="50">50 per page</SelectItem>
+                  <SelectItem value="100">100 per page</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filterStatus} onValueChange={(value) => {
+                setFilterStatus(value);
+                setPage(0);
+              }}>
+                <SelectTrigger className="w-[200px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Products</SelectItem>
+                  <SelectItem value="never_synced">Never Synced</SelectItem>
+                  <SelectItem value="modified">Modified</SelectItem>
+                  <SelectItem value="synced">Synced</SelectItem>
+                  <SelectItem value="error">Errors</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={pageSize.toString()} onValueChange={(value) => {
-              setPageSize(parseInt(value));
-              setPage(0);
-            }}>
-              <SelectTrigger className="w-[200px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Items per page" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="25">25 per page</SelectItem>
-                <SelectItem value="50">50 per page</SelectItem>
-                <SelectItem value="100">100 per page</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={(value) => {
-              setFilterStatus(value);
-              setPage(0);
-            }}>
-              <SelectTrigger className="w-[200px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Products</SelectItem>
-                <SelectItem value="never_synced">Never Synced</SelectItem>
-                <SelectItem value="modified">Modified</SelectItem>
-                <SelectItem value="synced">Synced</SelectItem>
-                <SelectItem value="error">Errors</SelectItem>
-              </SelectContent>
-            </Select>
+
+            {/* Filter by Tags */}
+            <div className="flex gap-4 items-center">
+              <div className="flex-1">
+                <MultiSelect
+                  options={tagOptions}
+                  selected={selectedTagIds}
+                  onChange={(tags) => {
+                    setSelectedTagIds(tags);
+                    setPage(0); // Reset to first page when filtering
+                  }}
+                  placeholder="Filter by tags..."
+                  className="w-full"
+                />
+              </div>
+              {selectedTagIds.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedTagIds([])}
+                >
+                  Clear Tag Filters
+                </Button>
+              )}
+            </div>
+
+            {/* Active filters indicator */}
+            {(search || filterStatus !== 'all' || selectedTagIds.length > 0) && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Filter className="h-4 w-4" />
+                <span>Active filters:</span>
+                {search && <Badge variant="secondary">Search: {search}</Badge>}
+                {filterStatus !== 'all' && <Badge variant="secondary">Status: {filterStatus}</Badge>}
+                {selectedTagIds.length > 0 && (
+                  <Badge variant="secondary">{selectedTagIds.length} tag{selectedTagIds.length > 1 ? 's' : ''}</Badge>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearch('');
+                    setFilterStatus('all');
+                    setSelectedTagIds([]);
+                    setPage(0);
+                  }}
+                  className="h-6 px-2 text-xs"
+                >
+                  Clear all
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Actions */}
@@ -342,19 +435,20 @@ export default function OdooProductsSync() {
                     publishProduct: publishProduct
                   });
                   setIsDialogOpen(false);
+                  // Reset form
+                  setPublishProduct(false);
                 }}>
                   <div className="space-y-4">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="active"
                         checked={publishProduct}
-                        onCheckedChange={() => setPublishProduct(true)}
+                        onCheckedChange={() => setPublishProduct(!publishProduct)}
                       />
                       <Label htmlFor="active" className="cursor-pointer">
-                        Publish or not the products
+                        Publish products to WooCommerce
                       </Label>
                     </div>
-
                   </div>
                   <div className="flex gap-2 pt-4">
                     <Button type="submit" className="flex-1">
