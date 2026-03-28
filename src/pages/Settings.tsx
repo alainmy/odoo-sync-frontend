@@ -7,6 +7,7 @@ import { Settings as SettingsIcon, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { updateActiveInstance } from '../services/instanceService';
 import { useInstanceStore } from '@/stores/instanceStore';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function Settings() {
   const { activeInstance, fetchActiveInstance } = useInstanceStore();
@@ -26,40 +27,43 @@ export default function Settings() {
   });
   const { toast } = useToast();
 
-  useEffect(() => {
+    useEffect(() => {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      await fetchActiveInstance();
-      if (activeInstance) {
-        setForm({
-          woocommerce_url: activeInstance.woocommerce_url || '',
-          woocommerce_consumer_key: activeInstance.woocommerce_consumer_key || '',
-          woocommerce_consumer_secret: activeInstance.woocommerce_consumer_secret || '',
-          odoo_url: activeInstance.odoo_url || '',
-          odoo_db: activeInstance.odoo_db || '',
-          odoo_username: activeInstance.odoo_username || '',
-          odoo_password: activeInstance.odoo_password || '',
-          sync_interval_minutes: (activeInstance as any).sync_interval_minutes || 15,
-          auto_sync_products: (activeInstance as any).auto_sync_products || false,
-          auto_sync_orders: (activeInstance as any).auto_sync_orders || false,
-        });
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'No se pudo cargar la configuración',
-        variant: 'destructive'
+  useEffect(() => {
+    if (activeInstance) {
+      setForm({
+        woocommerce_url: activeInstance.woocommerce_url || '',
+        woocommerce_consumer_key: activeInstance.woocommerce_consumer_key || '',
+        woocommerce_consumer_secret: activeInstance.woocommerce_consumer_secret || '',
+        odoo_url: activeInstance.odoo_url || '',
+        odoo_db: activeInstance.odoo_db || '',
+        odoo_username: activeInstance.odoo_username || '',
+        odoo_password: activeInstance.odoo_password || '',
+        sync_interval_minutes: (activeInstance as any).sync_interval_minutes || 15,
+        auto_sync_products: (activeInstance as any).auto_sync_products || false,
+        auto_sync_orders: (activeInstance as any).auto_sync_orders || false,
       });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [activeInstance]);
 
-  const handleChange = (e: any) => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        await fetchActiveInstance();
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'No se pudo cargar la configuración',
+          variant: 'destructive'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleChange = (e: any) => {
     setForm({ ...form, [e.target.id]: e.target.value });
   };
 
@@ -250,6 +254,30 @@ export default function Settings() {
                 value={form.sync_interval_minutes}
                 onChange={handleChange}
               />
+            </div>
+                        <div className="flex items-center space-x-2">
+              <Checkbox
+                id="auto_sync_products"
+                checked={Boolean(form.auto_sync_products)}
+                onCheckedChange={(checked) => {
+                  setForm({ ...form, auto_sync_products: Boolean(checked) });
+                }}
+              />
+              <Label htmlFor="auto_sync_products" className="cursor-pointer">
+                Auto sync products
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="auto_sync_orders"
+                checked={Boolean(form.auto_sync_orders)}
+                onCheckedChange={(checked) => {
+                  setForm({ ...form, auto_sync_orders: Boolean(checked) });
+                }}
+              />
+              <Label htmlFor="auto_sync_orders" className="cursor-pointer">
+                Auto sync orders
+              </Label>
             </div>
           </div>
           <Button onClick={handleSaveSync} disabled={saving}>

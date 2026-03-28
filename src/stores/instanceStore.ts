@@ -20,6 +20,8 @@ export interface WooCommerceInstance {
   odoo_language: string;
   product_descriptions: string;
   price_list_id: number | null;
+  auto_sync_orders: number | null;
+  auto_sync_products: number | null;
 }
 export interface Language {
   code: string;
@@ -37,7 +39,7 @@ interface InstanceState {
   price_list: PriceList[]; // Consider defining a proper interface for price list items
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
   setActiveInstance: (instance: WooCommerceInstance) => void;
   setInstances: (instances: WooCommerceInstance[]) => void;
