@@ -22,6 +22,7 @@ export interface WooCommerceInstance {
   price_list_id: number | null;
   auto_sync_orders: number | null;
   auto_sync_products: number | null;
+  odoo_description: string | null;
 }
 export interface Language {
   code: string;

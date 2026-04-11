@@ -415,6 +415,8 @@ export default function Instances() {
                       WC: {instance.woocommerce_url}
                       <br />
                       Odoo: {instance.odoo_url} ({instance.odoo_db})
+                      <br />
+                      Description: <strong>{instance.odoo_description}</strong>
                     </CardDescription>
                   </div>
                 </div>
