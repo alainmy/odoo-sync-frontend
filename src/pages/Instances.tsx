@@ -25,14 +25,29 @@ interface FormData {
   odoo_language: string;
   product_descriptions: string;
   price_list_id: number | null;
+  category_from_product: boolean;
+  website_id: number | null;
+}
+interface OdooConfig {
+  url: string;
+  db: string;
+  username: string;
+  password: string;
 }
 
 export default function Instances() {
-  const { instances, isLoading, fetchInstances,
-    activateInstance, 
-    languages,fetchLanguages, price_list, fetchPriceList } = useInstanceStore();
+  const { websites, instances, isLoading, fetchInstances,
+    activateInstance,
+    languages, fetchLanguages, price_list, fetchPriceList, fetchWebsites } = useInstanceStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingInstance, setEditingInstance] = useState<WooCommerceInstance | null>(null);
+  const [odoo_config, setOdooConfig] = useState<OdooConfig>({
+    url: '',
+    db: '',
+    username: '',
+    password: ''
+  });
+
   const [formData, setFormData] = useState<FormData>({
     name: '',
     woocommerce_url: '',
@@ -45,7 +60,9 @@ export default function Instances() {
     is_active: false,
     odoo_language: 'en_US',
     product_descriptions: 'sale_description',
-    price_list_id: null
+    price_list_id: null,
+    category_from_product: false,
+    website_id: null,
   });
   const { toast } = useToast();
 
@@ -53,7 +70,8 @@ export default function Instances() {
     fetchInstances();
     fetchLanguages();
     fetchPriceList();
-  }, [fetchInstances, fetchLanguages, fetchPriceList]);
+    fetchWebsites(odoo_config);
+  }, [fetchInstances, fetchLanguages, fetchPriceList,fetchWebsites]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,6 +154,14 @@ export default function Instances() {
   const openEditDialog = (instance: WooCommerceInstance) => {
     console.log('Editing instance:', instance);
     setEditingInstance(instance);
+    setOdooConfig({
+      url: instance.odoo_url,
+      db: instance.odoo_db,
+      username: instance.odoo_username,
+      password: instance.odoo_password
+    });
+    console.log('odoo_config', odoo_config);
+    fetchWebsites(odoo_config);
     setFormData({
       name: instance.name,
       woocommerce_url: instance.woocommerce_url,
@@ -148,7 +174,9 @@ export default function Instances() {
       is_active: instance.is_active,
       odoo_language: instance.odoo_language,
       product_descriptions: instance.product_descriptions,
-      price_list_id: instance.price_list_id
+      price_list_id: instance.price_list_id,
+      category_from_product: false, //instance.category_from_product,
+      website_id: instance.website_id
     });
     setIsDialogOpen(true);
   };
@@ -167,7 +195,9 @@ export default function Instances() {
       is_active: false,
       odoo_language: 'en_US',
       product_descriptions: 'sale_description',
-      price_list_id: null
+      price_list_id: null,
+      category_from_product: false,
+      website_id: null
     });
   };
 
@@ -255,7 +285,11 @@ export default function Instances() {
                     <Input
                       id="odoo_url"
                       value={formData.odoo_url}
-                      onChange={(e) => setFormData({ ...formData, odoo_url: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, odoo_url: e.target.value });
+                        setOdooConfig({ ...odoo_config, url: e.target.value });
+                        fetchWebsites({...odoo_config, url: e.target.value});
+                      }}
                       placeholder="https://miodoo.com"
                       required
                     />
@@ -265,7 +299,11 @@ export default function Instances() {
                     <Input
                       id="odoo_db"
                       value={formData.odoo_db}
-                      onChange={(e) => setFormData({ ...formData, odoo_db: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, odoo_db: e.target.value });
+                        setOdooConfig({ ...odoo_config, db: e.target.value });
+                        fetchWebsites({...odoo_config, db: e.target.value});
+                      }}
                       placeholder="nombre_db"
                       required
                     />
@@ -275,7 +313,11 @@ export default function Instances() {
                     <Input
                       id="odoo_user"
                       value={formData.odoo_username}
-                      onChange={(e) => setFormData({ ...formData, odoo_username: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, odoo_username: e.target.value });
+                        setOdooConfig({ ...odoo_config, username: e.target.value });
+                        fetchWebsites({...odoo_config, username: e.target.value});
+                      }}
                       placeholder="admin@miodoo.com"
                       required
                     />
@@ -286,10 +328,34 @@ export default function Instances() {
                       id="odoo_pass"
                       type="password"
                       value={formData.odoo_password}
-                      onChange={(e) => setFormData({ ...formData, odoo_password: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, odoo_password: e.target.value });
+                        setOdooConfig({ ...odoo_config, password: e.target.value });
+                        fetchWebsites({...odoo_config, password: e.target.value});
+                      }}
                       placeholder="••••••••"
                       required
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="website_id">Sitio web</Label>
+                    <Select
+                      required
+                      value={formData.website_id?.toString() || ''}
+                      onValueChange={(value) => setFormData({ ...formData, website_id: parseInt(value) || null })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select website" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Sin sitio web</SelectItem>
+                        {websites.map((pl) => (
+                          <SelectItem key={pl.id} value={pl.id.toString()}>
+                            {pl.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="odoo_language">Language</Label>
@@ -302,13 +368,13 @@ export default function Instances() {
                       </SelectTrigger>
                       <SelectContent>
                         {languages.map((lang) => (
-                          <SelectItem  key={lang.code} value={lang.code}>
+                          <SelectItem key={lang.code} value={lang.code}>
                             {lang.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  </div> 
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="price_list_id">Lista de precios</Label>
                     <Select
@@ -321,13 +387,13 @@ export default function Instances() {
                       <SelectContent>
                         <SelectItem value="0">Sin lista de precios</SelectItem>
                         {price_list.map((pl) => (
-                          <SelectItem  key={pl.id} value={pl.id.toString()}>
+                          <SelectItem key={pl.id} value={pl.id.toString()}>
                             {pl.odoo_pricelist_name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  </div> 
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="product_descriptions">Descripción del producto</Label>
                     <Select
@@ -346,7 +412,7 @@ export default function Instances() {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div> 
+                  </div>
                 </div>
               </div>
 
@@ -360,6 +426,17 @@ export default function Instances() {
                   Marcar como instancia activa
                 </Label>
               </div>
+              {/* <div className="flex items-center space-x-2 border-t pt-4">
+                <Checkbox
+                  id="category_from_product"
+                  checked={formData.category_from_product}
+                  onCheckedChange={(checked) => setFormData({ ...formData, category_from_product: checked as boolean })}
+                />
+                <Label htmlFor="category_from_product" className="cursor-pointer">
+                  Sincronizar categoría desde categorías de productos
+                  <div style={{ marginTop: 4, color: 'orange' }}>If you change this setting, it will affect how categories are synchronized between WooCommerce and Odoo.</div>
+                </Label>
+              </div> */}
 
               <div className="flex justify-end gap-2 border-t pt-4">
                 <Button
