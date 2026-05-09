@@ -257,6 +257,7 @@ export default function Instances() {
                     <Label htmlFor="wc_key">Consumer Key</Label>
                     <Input
                       id="wc_key"
+                      type="password"
                       value={formData.woocommerce_consumer_key}
                       onChange={(e) => setFormData({ ...formData, woocommerce_consumer_key: e.target.value })}
                       placeholder="ck_..."
