@@ -189,7 +189,7 @@ export const useInstanceStore = create<InstanceState>()(
         console.log('odoo_config', odoo_config);
         try {
           if (odoo_config.url && odoo_config.db && odoo_config.username && odoo_config.password) {
-            const response = await api.post(`/api/v1/odoo-websites`, odoo_config);
+            const response = await api.post(`/api/v1/odoo-websites/get`, odoo_config);
             const websites = response.data.websites;
             const active_instance = get().instances[0];
             const activeWebsite = active_instance ? active_instance : null;
