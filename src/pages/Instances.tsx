@@ -160,8 +160,16 @@ export default function Instances() {
       username: instance.odoo_username,
       password: instance.odoo_password
     });
+    const odooConfig: OdooConfig = {
+      url: instance.odoo_url || '',
+      db: instance.odoo_db || '',
+      username: instance.odoo_username || '',
+      password: instance.odoo_password || ''
+    };
     console.log('odoo_config', odoo_config);
-    fetchWebsites(odoo_config);
+    fetchWebsites(
+      odooConfig
+    );
     setFormData({
       name: instance.name,
       woocommerce_url: instance.woocommerce_url,
