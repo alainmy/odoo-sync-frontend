@@ -220,14 +220,14 @@ export default function Instances() {
         <div>
           <h1 className="text-3xl font-bold">Instancias</h1>
           <p className="text-muted-foreground mt-2">
-            Gestiona tus configuraciones de WooCommerce y Odoo
+            Manage your WooCommerce and Odoo configurations
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={openNewDialog}>
               <Plus className="mr-2 h-4 w-4" />
-              Nueva Instancia
+              New Instance
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -249,10 +249,10 @@ export default function Instances() {
               </div>
 
               <div className="border-t pt-4">
-                <h3 className="font-semibold mb-3">Configuración WooCommerce</h3>
+                <h3 className="font-semibold mb-3">WooCommerce Configuration</h3>
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <Label htmlFor="wc_url">URL de la tienda</Label>
+                    <Label htmlFor="wc_url">URL of the store</Label>
                     <Input
                       id="wc_url"
                       value={formData.woocommerce_url}
@@ -287,10 +287,10 @@ export default function Instances() {
               </div>
 
               <div className="border-t pt-4">
-                <h3 className="font-semibold mb-3">Configuración Odoo</h3>
+                <h3 className="font-semibold mb-3">Odoo Configuration</h3>
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <Label htmlFor="odoo_url">URL de Odoo</Label>
+                    <Label htmlFor="odoo_url">URL of Odoo</Label>
                     <Input
                       id="odoo_url"
                       value={formData.odoo_url}
@@ -304,7 +304,7 @@ export default function Instances() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="odoo_db">Base de datos</Label>
+                    <Label htmlFor="odoo_db">Database</Label>
                     <Input
                       id="odoo_db"
                       value={formData.odoo_db}
@@ -318,7 +318,7 @@ export default function Instances() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="odoo_user">Usuario</Label>
+                    <Label htmlFor="odoo_user">Username</Label>
                     <Input
                       id="odoo_user"
                       value={formData.odoo_username}
@@ -332,7 +332,7 @@ export default function Instances() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="odoo_pass">Contraseña</Label>
+                    <Label htmlFor="odoo_pass">Password</Label>
                     <Input
                       id="odoo_pass"
                       type="password"
@@ -347,7 +347,7 @@ export default function Instances() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="website_id">Sitio web</Label>
+                    <Label htmlFor="website_id">Website</Label>
                     <Select
                       required
                       value={formData.website_id?.toString() || ''}
@@ -357,7 +357,7 @@ export default function Instances() {
                         <SelectValue placeholder="Select website" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="0">Sin sitio web</SelectItem>
+                        <SelectItem value="0">No website</SelectItem>
                         {websites.map((pl) => (
                           <SelectItem key={pl.id} value={pl.id.toString()}>
                             {pl.name}
@@ -385,7 +385,7 @@ export default function Instances() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="price_list_id">Lista de precios</Label>
+                    <Label htmlFor="price_list_id">Price List</Label>
                     <Select
                       value={formData.price_list_id?.toString() || ''}
                       onValueChange={(value) => setFormData({ ...formData, price_list_id: parseInt(value) || null })}
@@ -394,7 +394,7 @@ export default function Instances() {
                         <SelectValue placeholder="Seleccionar lista de precios" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="0">Sin lista de precios</SelectItem>
+                        <SelectItem value="0">No price list</SelectItem>
                         {price_list.map((pl) => (
                           <SelectItem key={pl.id} value={pl.id.toString()}>
                             {pl.odoo_pricelist_name}
@@ -404,7 +404,7 @@ export default function Instances() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="product_descriptions">Descripción del producto</Label>
+                    <Label htmlFor="product_descriptions">Product Description</Label>
                     <Select
                       value={formData.product_descriptions}
                       onValueChange={(value) => setFormData({ ...formData, product_descriptions: value })}
@@ -414,10 +414,10 @@ export default function Instances() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="sale_description">
-                          Descripción de venta (sale_description)
+                          Sale Description (sale_description)
                         </SelectItem>
                         <SelectItem value="product_descriptions">
-                          Descripción del producto (product_descriptions)
+                          Product Description (product_descriptions)
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -432,7 +432,7 @@ export default function Instances() {
                   onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked as boolean })}
                 />
                 <Label htmlFor="is_active" className="cursor-pointer">
-                  Marcar como instancia activa
+                  Mark as active instance
                 </Label>
               </div>
               {/* <div className="flex items-center space-x-2 border-t pt-4">
@@ -456,7 +456,7 @@ export default function Instances() {
                     resetForm();
                   }}
                 >
-                  Cancelar
+                  Cancel
                 </Button>
                 <Button type="submit">
                   {editingInstance ? 'Actualizar' : 'Crear'}
@@ -470,14 +470,14 @@ export default function Instances() {
       {isLoading ? (
         <Card>
           <CardContent className="py-10">
-            <p className="text-center text-muted-foreground">Cargando instancias...</p>
+            <p className="text-center text-muted-foreground">Loading instances...</p>
           </CardContent>
         </Card>
       ) : instances.length === 0 ? (
         <Card>
           <CardContent className="py-10">
             <p className="text-center text-muted-foreground">
-              No hay instancias configuradas. Crea una nueva para empezar.
+              No instances configured. Create a new one to get started.
             </p>
           </CardContent>
         </Card>
@@ -493,7 +493,7 @@ export default function Instances() {
                       {instance.is_active && (
                         <Badge variant="default" className="ml-2">
                           <Check className="h-3 w-3 mr-1" />
-                          Activa
+                          Active
                         </Badge>
                       )}
                     </CardTitle>
@@ -516,7 +516,7 @@ export default function Instances() {
                       onClick={() => handleActivate(instance.id)}
                     >
                       <Check className="h-4 w-4 mr-1" />
-                      Activar
+                      Activate
                     </Button>
                   )}
                   <Button
@@ -525,7 +525,7 @@ export default function Instances() {
                     onClick={() => openEditDialog(instance)}
                   >
                     <Pencil className="h-4 w-4 mr-1" />
-                    Editar
+                    Edit
                   </Button>
                   <Button
                     size="sm"
@@ -533,7 +533,7 @@ export default function Instances() {
                     onClick={() => handleDelete(instance.id)}
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
-                    Eliminar
+                    Delete
                   </Button>
                 </div>
               </CardContent>
