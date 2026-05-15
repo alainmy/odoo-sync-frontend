@@ -24,6 +24,7 @@ import {
   Server,
   Sliders,
   DollarSign,
+  Percent,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -45,6 +46,7 @@ const menuItems: MenuItem[] = [
       { icon: Tags, label: 'Tags', path: '/tags' },
       { icon: Sliders, label: 'Attributes', path: '/attributes' },
       { icon: DollarSign, label: 'Price Lists', path: '/pricelists' },
+      { icon: Percent, label: 'Taxes', path: '/taxes' },
     ],
   },
   {
@@ -55,6 +57,7 @@ const menuItems: MenuItem[] = [
       { icon: FolderTree, label: 'Categories', path: '/odoo-categories' },
       { icon: Tags, label: 'Tags', path: '/odoo-tags' },
       { icon: Sliders, label: 'Attributes', path: '/odoo-attributes' },
+      { icon: DollarSign, label: 'Taxes', path: '/odoo-taxes' },
     ],
   },
   {
