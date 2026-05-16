@@ -104,6 +104,10 @@ export default function Settings() {
         sync_interval_minutes: parseInt(form.sync_interval_minutes),
         auto_sync_products: form.auto_sync_products,
         auto_sync_orders: form.auto_sync_orders,
+        odoo_url: form.odoo_url,
+        odoo_db: form.odoo_db,
+        odoo_username: form.odoo_username,
+        odoo_password: form.odoo_password
       });
       toast({
         title: 'Éxito',
