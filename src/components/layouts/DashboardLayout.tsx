@@ -25,6 +25,7 @@ import {
   Sliders,
   DollarSign,
   Percent,
+  CreditCard,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -47,6 +48,7 @@ const menuItems: MenuItem[] = [
       { icon: Sliders, label: 'Attributes', path: '/attributes' },
       { icon: DollarSign, label: 'Price Lists', path: '/pricelists' },
       { icon: Percent, label: 'Taxes', path: '/taxes' },
+      { icon: CreditCard, label: 'Payment Methods', path: '/payment-journals' },
     ],
   },
   {

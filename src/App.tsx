@@ -19,6 +19,7 @@ import OdooAttributes from './pages/OdooAttributes'
 import OdooTaxesSync from './pages/OdooTaxesSync'
 import PricelistsSync from './pages/PricelistsSync'
 import TaxesSync from './pages/TaxesSync'
+import PaymentJournalSync from './pages/PaymentJournalSync'
 import WebhooksManagement from './pages/WebhooksManagement'
 import './App.css'
 
@@ -51,8 +52,9 @@ function App() {
           <Route path="tags" element={<TagsSync />} />
           <Route path="attributes" element={<AttributesSync />} />
           <Route path="pricelists" element={<PricelistsSync />} />
-          <Route path="taxes" element={<TaxesSync />} />
-          <Route path="webhooks-management" element={<WebhooksManagement />} />
+           <Route path="taxes" element={<TaxesSync />} />
+           <Route path="payment-journals" element={<PaymentJournalSync />} />
+           <Route path="webhooks-management" element={<WebhooksManagement />} />
           <Route path="webhooks" element={<WebhookLogs />} />
           <Route path="tasks" element={<TaskLogs />} />
           <Route path="instances" element={<Instances />} />

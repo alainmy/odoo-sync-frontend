@@ -11,13 +11,22 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    host: '127.0.0.1',
+    port: 3007,
     proxy: {
       '/api': {
         target: 'http://localhost:8001',
         changeOrigin: true,
       },
       '/auth': {
+        target: 'http://localhost:8001',
+        changeOrigin: true,
+      },
+      '/odoo': {
+        target: 'http://localhost:8001',
+        changeOrigin: true,
+      },
+      '/woocommerce': {
         target: 'http://localhost:8001',
         changeOrigin: true,
       },

@@ -26,6 +26,7 @@ export interface WooCommerceInstance {
   category_from_product: boolean | true;
   website_id: number | null;
   website: Website | null;
+  odoo_journal_id: number | null;
 }
 export interface Language {
   code: string;

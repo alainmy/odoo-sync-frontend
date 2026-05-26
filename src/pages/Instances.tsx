@@ -11,6 +11,14 @@ import { useToast } from '@/hooks/use-toast';
 import { api } from '../lib/api';
 import { useInstanceStore, WooCommerceInstance } from '@/stores/instanceStore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
+import { fetchOdooJournals } from '@/services/paymentJournalService'
+
+interface OdooJournal {
+  id: number;
+  name: string;
+  type: string;
+  code: string;
+}
 
 interface FormData {
   name: string;
@@ -27,6 +35,7 @@ interface FormData {
   price_list_id: number | null;
   category_from_product: boolean;
   website_id: number | null;
+  odoo_journal_id: number | null;
 }
 interface OdooConfig {
   url: string;
@@ -48,6 +57,7 @@ export default function Instances() {
     password: ''
   });
 
+  const [journals, setJournals] = useState<OdooJournal[]>([]);
   const [formData, setFormData] = useState<FormData>({
     name: '',
     woocommerce_url: '',
@@ -63,6 +73,7 @@ export default function Instances() {
     price_list_id: null,
     category_from_product: false,
     website_id: null,
+    odoo_journal_id: null,
   });
   const { toast } = useToast();
 
@@ -151,6 +162,15 @@ export default function Instances() {
     }
   };
 
+  const loadJournals = async () => {
+    try {
+      const response = await fetchOdooJournals('sale')
+      setJournals(response.payment_journals ?? [])
+    } catch {
+      setJournals([])
+    }
+  }
+
   const openEditDialog = (instance: WooCommerceInstance) => {
     console.log('Editing instance:', instance);
     setEditingInstance(instance);
@@ -184,8 +204,10 @@ export default function Instances() {
       product_descriptions: instance.product_descriptions,
       price_list_id: instance.price_list_id,
       category_from_product: false, //instance.category_from_product,
-      website_id: instance.website_id
+      website_id: instance.website_id,
+      odoo_journal_id: instance.odoo_journal_id ?? null
     });
+    loadJournals();
     setIsDialogOpen(true);
   };
 
@@ -205,12 +227,14 @@ export default function Instances() {
       product_descriptions: 'sale_description',
       price_list_id: null,
       category_from_product: false,
-      website_id: null
+      website_id: null,
+      odoo_journal_id: null,
     });
   };
 
   const openNewDialog = () => {
     resetForm();
+    loadJournals();
     setIsDialogOpen(true);
   };
 
@@ -398,6 +422,25 @@ export default function Instances() {
                         {price_list.map((pl) => (
                           <SelectItem key={pl.id} value={pl.id.toString()}>
                             {pl.odoo_pricelist_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="odoo_journal_id">Odoo Journal</Label>
+                    <Select
+                      value={formData.odoo_journal_id?.toString() || ''}
+                      onValueChange={(value) => setFormData({ ...formData, odoo_journal_id: parseInt(value) || null })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select journal" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">No journal</SelectItem>
+                        {journals.map((j) => (
+                          <SelectItem key={j.id} value={j.id.toString()}>
+                            [{j.code}] {j.name} ({j.type})
                           </SelectItem>
                         ))}
                       </SelectContent>
