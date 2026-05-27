@@ -341,7 +341,8 @@ if (typeof window !== 'undefined') {
         db: useInstanceStore.getState().odooConfig?.db || "",
         url: useInstanceStore.getState().odooConfig?.url || "",
         username: useInstanceStore.getState().odooConfig?.username || "",
-        password: useInstanceStore.getState().odooConfig?.password || ""
+        password: useInstanceStore.getState().odooConfig?.password || "",
+        company_id: useInstanceStore.getState().odooConfig?.company_id || null
       });
     }
   });
