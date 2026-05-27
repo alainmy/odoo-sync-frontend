@@ -27,6 +27,7 @@ export interface WooCommerceInstance {
   website_id: number | null;
   website: Website | null;
   odoo_journal_id: number | null;
+  company_id: number | null;
 }
 export interface Language {
   code: string;
@@ -47,6 +48,7 @@ export interface OdooConfig {
   db: string;
   username: string;
   password: string;
+  company_id: number | null;
 }
 interface InstanceState {
   activeInstance: WooCommerceInstance | null;

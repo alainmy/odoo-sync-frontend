@@ -12,12 +12,18 @@ import { api } from '../lib/api';
 import { useInstanceStore, WooCommerceInstance } from '@/stores/instanceStore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
 import { fetchOdooJournals } from '@/services/paymentJournalService'
+import { fetchOdooCompanies } from '@/services/companyServices';
 
 interface OdooJournal {
   id: number;
   name: string;
   type: string;
   code: string;
+}
+
+interface OdooCompany {
+  id: number;
+  name: string;
 }
 
 interface FormData {
@@ -36,12 +42,14 @@ interface FormData {
   category_from_product: boolean;
   website_id: number | null;
   odoo_journal_id: number | null;
+  company_id: number | null;
 }
 interface OdooConfig {
   url: string;
   db: string;
   username: string;
   password: string;
+  company_id: number | null;
 }
 
 export default function Instances() {
@@ -54,10 +62,12 @@ export default function Instances() {
     url: '',
     db: '',
     username: '',
-    password: ''
+    password: '',
+    company_id: null
   });
 
   const [journals, setJournals] = useState<OdooJournal[]>([]);
+  const [companies, setCompanies] = useState<OdooCompany[]>([]);
   const [formData, setFormData] = useState<FormData>({
     name: '',
     woocommerce_url: '',
@@ -74,6 +84,7 @@ export default function Instances() {
     category_from_product: false,
     website_id: null,
     odoo_journal_id: null,
+    company_id: null,
   });
   const { toast } = useToast();
 
@@ -82,7 +93,7 @@ export default function Instances() {
     fetchLanguages();
     fetchPriceList();
     fetchWebsites(odoo_config);
-  }, [fetchInstances, fetchLanguages, fetchPriceList,fetchWebsites]);
+  }, [fetchInstances, fetchLanguages, fetchPriceList, fetchWebsites]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,6 +182,15 @@ export default function Instances() {
     }
   }
 
+  const loadCompanies = async () => {
+    try {
+      const response = await fetchOdooCompanies()
+      setCompanies(response.companies ?? [])
+    } catch {
+      setCompanies([])
+    }
+  }
+
   const openEditDialog = (instance: WooCommerceInstance) => {
     console.log('Editing instance:', instance);
     setEditingInstance(instance);
@@ -178,13 +198,15 @@ export default function Instances() {
       url: instance.odoo_url,
       db: instance.odoo_db,
       username: instance.odoo_username,
-      password: instance.odoo_password
+      password: instance.odoo_password,
+      company_id: instance.company_id
     });
     const odooConfig: OdooConfig = {
       url: instance.odoo_url || '',
       db: instance.odoo_db || '',
       username: instance.odoo_username || '',
-      password: instance.odoo_password || ''
+      password: instance.odoo_password || '',
+      company_id: instance.company_id ?? null
     };
     console.log('odoo_config', odoo_config);
     fetchWebsites(
@@ -205,9 +227,11 @@ export default function Instances() {
       price_list_id: instance.price_list_id,
       category_from_product: false, //instance.category_from_product,
       website_id: instance.website_id,
-      odoo_journal_id: instance.odoo_journal_id ?? null
+      odoo_journal_id: instance.odoo_journal_id ?? null,
+      company_id: instance.company_id ?? null
     });
     loadJournals();
+    loadCompanies();
     setIsDialogOpen(true);
   };
 
@@ -229,12 +253,14 @@ export default function Instances() {
       category_from_product: false,
       website_id: null,
       odoo_journal_id: null,
+      company_id: null,
     });
   };
 
   const openNewDialog = () => {
     resetForm();
     loadJournals();
+    loadCompanies();
     setIsDialogOpen(true);
   };
 
@@ -321,7 +347,7 @@ export default function Instances() {
                       onChange={(e) => {
                         setFormData({ ...formData, odoo_url: e.target.value });
                         setOdooConfig({ ...odoo_config, url: e.target.value });
-                        fetchWebsites({...odoo_config, url: e.target.value});
+                        fetchWebsites({ ...odoo_config, url: e.target.value });
                       }}
                       placeholder="https://miodoo.com"
                       required
@@ -335,7 +361,7 @@ export default function Instances() {
                       onChange={(e) => {
                         setFormData({ ...formData, odoo_db: e.target.value });
                         setOdooConfig({ ...odoo_config, db: e.target.value });
-                        fetchWebsites({...odoo_config, db: e.target.value});
+                        fetchWebsites({ ...odoo_config, db: e.target.value });
                       }}
                       placeholder="nombre_db"
                       required
@@ -349,7 +375,7 @@ export default function Instances() {
                       onChange={(e) => {
                         setFormData({ ...formData, odoo_username: e.target.value });
                         setOdooConfig({ ...odoo_config, username: e.target.value });
-                        fetchWebsites({...odoo_config, username: e.target.value});
+                        fetchWebsites({ ...odoo_config, username: e.target.value });
                       }}
                       placeholder="admin@miodoo.com"
                       required
@@ -364,11 +390,36 @@ export default function Instances() {
                       onChange={(e) => {
                         setFormData({ ...formData, odoo_password: e.target.value });
                         setOdooConfig({ ...odoo_config, password: e.target.value });
-                        fetchWebsites({...odoo_config, password: e.target.value});
+                        fetchWebsites({ ...odoo_config, password: e.target.value });
                       }}
                       placeholder="••••••••"
                       required
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="company_id">Company</Label>
+                    <Select
+                      required
+                      value={formData.company_id?.toString() || ''}
+                      onValueChange={(value) => {
+                        setFormData({ ...formData, company_id: parseInt(value) || null })
+                        setOdooConfig({ ...odoo_config, company_id: parseInt(value) || null })
+                        fetchWebsites({ ...odoo_config, company_id: parseInt(value) || null })
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select company" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">No company</SelectItem>
+                        {companies.map((pl) => (
+                          <SelectItem key={pl.id} value={pl.id.toString()}>
+                            {pl.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                      <small>If you shoose a company, you must be sure that the company has websites configured</small>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="website_id">Website</Label>
