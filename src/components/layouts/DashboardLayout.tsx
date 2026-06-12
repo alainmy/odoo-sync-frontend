@@ -26,6 +26,7 @@ import {
   DollarSign,
   Percent,
   CreditCard,
+  Users,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -72,6 +73,7 @@ const menuItems: MenuItem[] = [
   },
   { icon: ListChecks, label: 'Tasks', path: '/tasks' },
   { icon: Server, label: 'Instances', path: '/instances' },
+  { icon: Users, label: 'Users', path: '/users' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ]
 

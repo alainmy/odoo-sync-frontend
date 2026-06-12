@@ -12,6 +12,7 @@ import WebhookLogs from './pages/WebhookLogs'
 import TaskLogs from './pages/TaskLogs'
 import Settings from './pages/Settings'
 import Instances from './pages/Instances'
+import UsersPage from './pages/UsersPage'
 import OdooProductsSync from './pages/OdooProductsSync'
 import OdooCategoriesSync from './pages/OdooCategoriesSync'
 import OdooTagsSync from './pages/OdooTagsSync'
@@ -58,6 +59,7 @@ function App() {
           <Route path="webhooks" element={<WebhookLogs />} />
           <Route path="tasks" element={<TaskLogs />} />
           <Route path="instances" element={<Instances />} />
+          <Route path="users" element={<UsersPage />} />
           <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>

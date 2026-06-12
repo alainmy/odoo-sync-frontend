@@ -10,6 +10,7 @@ interface User {
 interface AuthState {
   user: User | null
   token: string | null
+  is_superuser: boolean | false
   isAuthenticated: boolean
   login: (username: string, password: string) => Promise<void>
   logout: () => void
@@ -22,6 +23,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
+      is_superuser: false,
       isAuthenticated: false,
       login: async (username: string, password: string) => {
         try {
@@ -30,13 +32,14 @@ export const useAuthStore = create<AuthState>()(
           formData.append('username', username)
           formData.append('password', password)
 
-          const response = await fetch(`${API_URL}/auth/login`, {
+          const response = await fetch(`${API_URL || ''}/auth/login`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded',
             },
             body: formData.toString(),
           })
+          debugger
 
           if (!response.ok) {
             throw new Error('Invalid credentials')
@@ -46,19 +49,22 @@ export const useAuthStore = create<AuthState>()(
           set({
             user: { id: 0, email: username, name: username }, // Placeholder until we get user info
             token: data.access_token,
+            is_superuser: data.is_superuser,
             isAuthenticated: true,
           })
           localStorage.setItem('access_token', data.access_token)
+          localStorage.setItem('is_superuser', data.is_superuser.toString())
         } catch (error) {
           throw error
         }
       },
       logout: () => {
         localStorage.removeItem('access_token')
-        set({ user: null, token: null, isAuthenticated: false })
+        localStorage.removeItem('is_superuser')
+        set({ user: null, token: null, is_superuser: false, isAuthenticated: false })
       },
       setUser: (user: User, token: string) => {
-        set({ user, token, isAuthenticated: true })
+        set({ user, token, is_superuser:true, isAuthenticated: true })
         localStorage.setItem('access_token', token)
       },
     }),
