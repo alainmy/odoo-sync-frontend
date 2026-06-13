@@ -22,6 +22,7 @@ export interface UserUpdate {
   email: string;
   changed_password: string | null;
   full_name: string | null;
+  is_superuser: boolean | null;
 }
 
 export const getUsers = async (): Promise<User[]> => {

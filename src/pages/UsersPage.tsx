@@ -101,6 +101,7 @@ export default function UsersPage() {
             email: form.email,
             changed_password: form.changed_password,
             full_name: form.full_name,
+            is_superuser: form.is_superuser,
           });
         toast({ title: 'Éxito', description: 'User updated successfully' });
       } else {
@@ -205,7 +206,6 @@ export default function UsersPage() {
                   type="password"
                   value={form.changed_password}
                   onChange={(e) => setForm({ ...form, changed_password: e.target.value })}
-                  required
                 />
               </div>
             )}
