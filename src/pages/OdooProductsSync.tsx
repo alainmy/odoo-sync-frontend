@@ -163,7 +163,7 @@ export default function OdooProductsSync() {
         force_sync: false,
         create_if_not_exists: true,
         update_existing: true,
-        publish_product: params.publishProduct
+        publish_product: true //params.publishProduct
       });
       return response.data;
     },
@@ -440,13 +440,13 @@ export default function OdooProductsSync() {
                 }}>
                   <div className="space-y-4">
                     <div className="flex items-center space-x-2">
-                      <Checkbox
+                      {/* <Checkbox
                         id="active"
                         checked={publishProduct}
                         onCheckedChange={() => setPublishProduct(!publishProduct)}
-                      />
+                      /> */}
                       <Label htmlFor="active" className="cursor-pointer">
-                        Publish products to WooCommerce
+                        Do you want to publish this product?
                       </Label>
                     </div>
                   </div>
