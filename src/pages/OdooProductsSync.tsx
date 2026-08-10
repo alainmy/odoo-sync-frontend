@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, RefreshCw, Search, Sliders, Filter } from 'lucide-react';
+import { Loader2, RefreshCw, Search, Sliders, Filter, Eye } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { DialogTitle } from '@radix-ui/react-dialog';
 import { Label } from '@/components/ui/label';
@@ -67,6 +67,29 @@ interface BatchSyncParams {
   update_existing?: boolean;
 }
 
+interface WooCommerceProductDetail {
+  odoo_id: number;
+  woocommerce_id: number;
+  name: string | null;
+  status: string | null;
+  product: {
+    id: number;
+    name: string;
+    slug: string;
+    permalink: string;
+    status: string;
+    regular_price: string;
+    sale_price: string;
+    sku: string;
+    stock_status: string;
+    stock_quantity: number | null;
+    description: string;
+    short_description: string;
+    categories: { id: number; name: string }[];
+    images: { id: number; src: string; name: string }[];
+  };
+}
+
 const statusVariants = {
   never_synced: { variant: 'secondary' as const, label: 'Never Synced' },
   synced: { variant: 'success' as const, label: 'Synced' },
@@ -87,6 +110,17 @@ export default function OdooProductsSync() {
   const queryClient = useQueryClient();
   const [publishProduct, setPublishProduct] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [detailOdooId, setDetailOdooId] = useState<number | null>(null);
+
+  const detailQuery = useQuery<WooCommerceProductDetail>({
+    queryKey: ['product-woocommerce-detail', detailOdooId],
+    queryFn: async () => {
+      if (detailOdooId === null) return Promise.reject(new Error('No product selected'));
+      const response = await api.get(`/api/v1/sync-management/products/${detailOdooId}/woocommerce-detail`);
+      return response.data;
+    },
+    enabled: detailOdooId !== null,
+  });
 
   useEffect(() => {
     fetchTags();
@@ -187,6 +221,31 @@ export default function OdooProductsSync() {
         variant: 'destructive',
         title: 'Sync Failed',
         description: message || 'Failed to start synchronization',
+      });
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ odoo_id, publish }: { odoo_id: number; publish: boolean }) => {
+      const response = await api.post('/api/v1/sync-management/products/batch-sync/update-status', {
+        odoo_ids: [odoo_id],
+        publish_product: publish,
+      });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Status Updated',
+        description: data.message,
+      });
+      queryClient.invalidateQueries({ queryKey: ['odoo-products-sync'] });
+    },
+    onError: (error: any) => {
+      let message = error.response?.data?.detail || 'Failed to update publish status';
+      toast({
+        variant: 'destructive',
+        title: 'Update Failed',
+        description: message,
       });
     },
   });
@@ -497,6 +556,7 @@ export default function OdooProductsSync() {
                     <TableHead>WC ID</TableHead>
                     <TableHead>Last Synced</TableHead>
                     <TableHead>Published</TableHead>
+                    <TableHead>Details</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -534,10 +594,44 @@ export default function OdooProductsSync() {
                         {formatDate(product.last_synced_at)}
                       </TableCell>
                       <TableCell>
-                        {product.published ? (
-                          <Badge variant="success">Published</Badge>
-                        ) : (
-                          <Badge variant="secondary">Draft</Badge>
+                        <div className="flex items-center gap-2">
+                          {product.published ? (
+                            <Badge variant="success">Published</Badge>
+                          ) : (
+                            <Badge variant="secondary">Draft</Badge>
+                          )}
+                          {product.sync_status !== 'never_synced' && (
+                          <Button
+                            size="sm"
+                            variant={product.published ? 'outline' : 'default'}
+                            onClick={() => updateStatusMutation.mutate({
+                              odoo_id: product.odoo_id,
+                              publish: !product.published,
+                            })}
+                            disabled={
+                              updateStatusMutation.isPending &&
+                              updateStatusMutation.variables?.odoo_id === product.odoo_id
+                            }
+                          >
+                            {updateStatusMutation.isPending &&
+                              updateStatusMutation.variables?.odoo_id === product.odoo_id && (
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              )}
+                            {product.published ? 'Unpublish' : 'Publish'}
+                          </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {product.sync_status !== 'never_synced' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setDetailOdooId(product.odoo_id)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View
+                          </Button>
                         )}
                       </TableCell>
                     </TableRow>
@@ -575,6 +669,121 @@ export default function OdooProductsSync() {
           )}
         </CardContent>
       </Card>
+
+      {/* WooCommerce Product Detail Modal */}
+      <Dialog open={detailOdooId !== null} onOpenChange={(open) => {
+        if (!open) setDetailOdooId(null);
+      }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>WooCommerce Product Detail</DialogTitle>
+          </DialogHeader>
+          {detailQuery.isPending ? (
+            <div className="flex items-center justify-center h-40">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : detailQuery.isError ? (
+            <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+              <p className="text-lg font-medium">Failed to load product detail</p>
+              <p className="text-sm text-destructive">
+                {detailQuery.error instanceof Error
+                  ? detailQuery.error.message
+                  : 'Something went wrong'}
+              </p>
+            </div>
+          ) : detailQuery.data ? (
+            <div className="space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  {detailQuery.data.product.images?.[0] && (
+                    <img
+                      src={detailQuery.data.product.images[0].src}
+                      alt={detailQuery.data.product.name}
+                      className="h-24 w-24 rounded-md object-cover border"
+                    />
+                  )}
+                  <div>
+                    <h2 className="text-xl font-semibold">{detailQuery.data.product.name}</h2>
+                    {detailQuery.data.product.permalink && (
+                      <a
+                        href={detailQuery.data.product.permalink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-blue-600 hover:underline break-all"
+                      >
+                        {detailQuery.data.product.permalink}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground">WooCommerce ID</p>
+                  <p className="font-medium">{detailQuery.data.woocommerce_id}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Status</p>
+                  <Badge variant={detailQuery.data.product.status === 'publish' ? 'success' : 'secondary'}>
+                    {detailQuery.data.product.status}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">SKU</p>
+                  <p className="font-medium">{detailQuery.data.product.sku || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Slug</p>
+                  <p className="font-medium break-all">{detailQuery.data.product.slug || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Regular Price</p>
+                  <p className="font-medium">{detailQuery.data.product.regular_price || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Sale Price</p>
+                  <p className="font-medium">{detailQuery.data.product.sale_price || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Stock Status</p>
+                  <p className="font-medium">{detailQuery.data.product.stock_status || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Stock Quantity</p>
+                  <p className="font-medium">
+                    {detailQuery.data.product.stock_quantity !== null && detailQuery.data.product.stock_quantity !== undefined
+                      ? detailQuery.data.product.stock_quantity
+                      : '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Categories</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {detailQuery.data.product.categories?.length
+                      ? detailQuery.data.product.categories.map((cat) => (
+                          <Badge key={cat.id} variant="secondary">{cat.name}</Badge>
+                        ))
+                      : <span>-</span>}
+                  </div>
+                </div>
+              </div>
+
+              {(detailQuery.data.product.short_description || detailQuery.data.product.description) && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Description</p>
+                  <div
+                    className="text-sm prose prose-sm"
+                    dangerouslySetInnerHTML={{
+                      __html: detailQuery.data.product.short_description || detailQuery.data.product.description,
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
