@@ -396,6 +396,17 @@ export default function Instances() {
                       required
                     />
                   </div>
+                  <div className="rounded-md border border-orange-300 bg-orange-50 px-3 py-2 text-sm text-orange-800">
+                    It is recommended to install the <strong>product_dimension</strong> module from OCA in Odoo to sync product dimensions correctly.{' '}
+                    <a
+                      href="https://github.com/OCA/product-attribute"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium underline"
+                    >
+                      View repository
+                    </a>
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="company_id">Company</Label>
                     <Select
