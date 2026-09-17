@@ -25,6 +25,10 @@ interface OdooCompany {
   id: number;
   name: string;
 }
+interface OdooTax {
+  odoo_id: number;
+  name: string;
+}
 
 interface FormData {
   name: string;
@@ -43,6 +47,7 @@ interface FormData {
   website_id: number | null;
   odoo_journal_id: number | null;
   company_id: number | null;
+  tax_included_id: number | null;
 }
 interface OdooConfig {
   url: string;
@@ -53,7 +58,7 @@ interface OdooConfig {
 }
 
 export default function Instances() {
-  const { websites, instances, isLoading, fetchInstances,
+  const { websites, instances, isLoading, fetchInstances,fetchtialIncluded,
     activateInstance,
     languages, fetchLanguages, price_list, fetchPriceList, fetchWebsites } = useInstanceStore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -67,6 +72,7 @@ export default function Instances() {
   });
 
   const [journals, setJournals] = useState<OdooJournal[]>([]);
+  const [taxes, setTaxes] = useState<OdooTax[]>([]);
   const [companies, setCompanies] = useState<OdooCompany[]>([]);
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -85,6 +91,7 @@ export default function Instances() {
     website_id: null,
     odoo_journal_id: null,
     company_id: null,
+    tax_included_id: null,
   });
   const { toast } = useToast();
 
@@ -92,8 +99,9 @@ export default function Instances() {
     fetchInstances();
     fetchLanguages();
     fetchPriceList();
+    fetchtialIncluded();
     fetchWebsites(odoo_config);
-  }, [fetchInstances, fetchLanguages, fetchPriceList, fetchWebsites]);
+  }, [fetchInstances, fetchLanguages, fetchPriceList, fetchWebsites,fetchtialIncluded]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,6 +199,14 @@ export default function Instances() {
     }
   }
 
+  const loadtaxes = async () => {
+    try {
+      const response = await fetchtialIncluded();
+      setTaxes(Array.isArray(response) ? response : [])
+    } catch {
+      setTaxes([])
+    }
+  }
   const openEditDialog = (instance: WooCommerceInstance) => {
     console.log('Editing instance:', instance);
     setEditingInstance(instance);
@@ -228,11 +244,13 @@ export default function Instances() {
       category_from_product: false, //instance.category_from_product,
       website_id: instance.website_id,
       odoo_journal_id: instance.odoo_journal_id ?? null,
-      company_id: instance.company_id ?? null
+      company_id: instance.company_id ?? null,
+      tax_included_id: instance.tax_included_id ?? null
     });
     loadJournals();
     loadCompanies();
     setIsDialogOpen(true);
+    loadtaxes();
   };
 
   const resetForm = () => {
@@ -254,6 +272,7 @@ export default function Instances() {
       website_id: null,
       odoo_journal_id: null,
       company_id: null,
+      tax_included_id: null,
     });
   };
 
@@ -261,6 +280,7 @@ export default function Instances() {
     resetForm();
     loadJournals();
     loadCompanies();
+    loadtaxes();
     setIsDialogOpen(true);
   };
 
@@ -503,6 +523,25 @@ export default function Instances() {
                         {journals.map((j) => (
                           <SelectItem key={j.id} value={j.id.toString()}>
                             [{j.code}] {j.name} ({j.type})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tax_included_id">Tax included</Label>
+                    <Select
+                      value={formData.tax_included_id?.toString() || ''}
+                      onValueChange={(value) => setFormData({ ...formData, tax_included_id: parseInt(value) || null })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select tax included" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">No tax included</SelectItem>
+                        {taxes.map((j) => (
+                          <SelectItem key={j.odoo_id} value={j.odoo_id.toString()}>
+                            [{j.odoo_id}] {j.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

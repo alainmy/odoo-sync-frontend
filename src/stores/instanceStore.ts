@@ -28,6 +28,7 @@ export interface WooCommerceInstance {
   website: Website | null;
   odoo_journal_id: number | null;
   company_id: number | null;
+  tax_included_id: number | null;
 }
 export interface Language {
   code: string;
@@ -36,6 +37,11 @@ export interface Language {
 export interface PriceList {
   id: number;
   odoo_pricelist_name: string;
+}
+
+export interface TaxIncluded {
+  odoo_id: number;
+  name: string;
 }
 
 export interface Website {
@@ -55,6 +61,7 @@ interface InstanceState {
   activeWebsite: Website | null;
   instances: WooCommerceInstance[];
   languages: Language[];
+  taxes_inluded: TaxIncluded[];
   price_list: PriceList[]; // Consider defining a proper interface for price list items
   websites: Website[];
   isLoading: boolean;
@@ -71,6 +78,7 @@ interface InstanceState {
   activateWebsite: (id: number) => Promise<void>;
   clearInstances: () => void;
   fetchLanguages: () => Promise<void>;
+  fetchtialIncluded: () => Promise<TaxIncluded[]>;
   fetchPriceList: () => Promise<void>;
   fetchWebsites: (odoo_config: OdooConfig) => Promise<void>;
 }
@@ -85,6 +93,7 @@ export const useInstanceStore = create<InstanceState>()(
       isLoading: false,
       error: null,
       languages: [],
+      taxes_inluded: [],
       price_list: [],
       odooConfig: null,
 
@@ -166,6 +175,28 @@ export const useInstanceStore = create<InstanceState>()(
             description: 'Failed to load languages from Odoo',
             variant: 'destructive'
           });
+        }
+      },
+      fetchtialIncluded: async (): Promise<TaxIncluded[]> => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await api.get(`/api/v1/sync-management/taxes?only_included=true`);
+          const taxes_inluded = Array.isArray(response.data?.taxes) ? response.data.taxes : [];
+          set({ isLoading: false, taxes_inluded });
+          console.log(taxes_inluded);
+          return taxes_inluded;
+        } catch (error: any) {
+          console.error('Error fetching tax included:', error);
+          set({
+            error: error.response?.data?.detail || 'Error al cargar listas de precios',
+            isLoading: false
+          });
+          toast({
+            title: 'Error',
+            description: 'Failed to load tax included from Odoo',
+            variant: 'destructive'
+          });
+          return [];
         }
       },
       fetchPriceList: async () => {
