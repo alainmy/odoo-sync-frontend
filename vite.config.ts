@@ -15,19 +15,19 @@ export default defineConfig({
     port: 3007,
     proxy: {
       '/api': {
-        target: 'http://localhost:8001',
+        target: 'http://fastapi:5010',
         changeOrigin: true,
       },
       '/auth': {
-        target: 'http://fastapi:8000',
+        target: 'http://fastapi:5010',
         changeOrigin: true,
       },
       '/odoo': {
-        target: 'http://fastapi:8001',
+        target: 'http://fastapi:5010',
         changeOrigin: true,
       },
       '/woocommerce': {
-        target: 'http://fastapi:8001',
+        target: 'http://fastapi:5010',
         changeOrigin: true,
       },
     },
