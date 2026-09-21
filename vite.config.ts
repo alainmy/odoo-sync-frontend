@@ -17,6 +17,7 @@ export default defineConfig({
       '/api': {
         target: 'http://fastapi:5010',
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
       '/auth': {
         target: 'http://fastapi:5010',
