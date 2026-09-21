@@ -19,15 +19,15 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/auth': {
-        target: 'http://localhost:8001',
+        target: 'http://fastapi:8000',
         changeOrigin: true,
       },
       '/odoo': {
-        target: 'http://localhost:8001',
+        target: 'http://fastapi:8001',
         changeOrigin: true,
       },
       '/woocommerce': {
-        target: 'http://localhost:8001',
+        target: 'http://fastapi:8001',
         changeOrigin: true,
       },
     },
