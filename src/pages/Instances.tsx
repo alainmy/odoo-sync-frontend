@@ -557,11 +557,8 @@ export default function Instances() {
                         <SelectValue placeholder="Seleccionar descripción del producto" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="sale_description">
-                          Sale Description (sale_description)
-                        </SelectItem>
-                        <SelectItem value="product_descriptions">
-                          Product Description (product_descriptions)
+                        <SelectItem value="description_ecommerce">
+                          WooCommerce Description (description_ecommerce)
                         </SelectItem>
                       </SelectContent>
                     </Select>
