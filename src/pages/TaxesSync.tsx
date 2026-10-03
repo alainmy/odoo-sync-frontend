@@ -3,8 +3,11 @@ import api from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { RefreshCw, CheckCircle, XCircle, AlertCircle, Percent } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { RefreshCw, CheckCircle, XCircle, AlertCircle, Percent, Trash2, Server } from 'lucide-react'
 import { useState } from 'react'
+import { useSyncDeletion } from '@/hooks/use-sync-deletion'
+import { useInstanceStore } from '@/stores/instanceStore'
 
 interface TaxSync {
   id: number
@@ -24,10 +27,25 @@ interface TaxSync {
   message: string
   error_details: string | null
   last_synced_at: string | null
+  instance_id: number | null
+  instance_name: string | null
 }
 
 export default function TaxesSync() {
   const [filter, setFilter] = useState<'all' | 'errors'>('all')
+  const activeInstance = useInstanceStore(state => state.activeInstance)
+  const {
+    selectedIds,
+    toggleSelect,
+    toggleSelectAll,
+    handleDeleteSelected,
+    handleDeleteAll,
+    handleDeleteOne,
+    isDeleting,
+  } = useSyncDeletion({
+    basePath: '/api/v1/sync/taxes',
+    queryKeys: ['taxes-sync'],
+  })
 
   const { data: taxes, isLoading, refetch } = useQuery<TaxSync[]>({
     queryKey: ['taxes-sync', filter],
@@ -37,6 +55,8 @@ export default function TaxesSync() {
       return response.data
     },
   })
+
+  const taxIds = taxes?.map(t => t.id) ?? []
 
   const formatRate = (rate: number | null) => {
     if (rate === null || rate === undefined) return '-'
@@ -57,13 +77,23 @@ export default function TaxesSync() {
             View and manage tax sync status between Odoo and WooCommerce
           </p>
         </div>
-        <Button onClick={() => refetch()} disabled={isLoading}>
-          <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="destructive"
+            onClick={() => handleDeleteAll('tax', activeInstance?.name)}
+            disabled={isDeleting}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete All
+          </Button>
+          <Button onClick={() => refetch()} disabled={isLoading}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
         <Button
           variant={filter === 'all' ? 'default' : 'outline'}
           onClick={() => setFilter('all')}
@@ -76,6 +106,24 @@ export default function TaxesSync() {
         >
           Errors Only
         </Button>
+        {taxes && taxes.length > 0 && (
+          <>
+            <Button
+              variant="outline"
+              onClick={() => toggleSelectAll(taxIds)}
+            >
+              {selectedIds.length === taxIds.length ? 'Deselect All' : 'Select All'}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={selectedIds.length === 0 || isDeleting}
+              onClick={() => handleDeleteSelected('tax')}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Selected ({selectedIds.length})
+            </Button>
+          </>
+        )}
       </div>
 
       <div className="grid gap-4">
@@ -87,23 +135,36 @@ export default function TaxesSync() {
           </Card>
         ) : taxes && taxes.length > 0 ? (
           taxes.map((tax) => (
-            <Card key={tax.id}>
+            <Card key={tax.id} className={selectedIds.includes(tax.id) ? 'border-primary' : ''}>
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">
-                      {tax.odoo_name ? tax.odoo_name : `Tax #${tax.odoo_id}`}
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Odoo ID: {tax.odoo_id} | WooCommerce ID: {tax.woocommerce_id}
-                    </p>
-                    <div className="flex gap-3 mt-2 text-sm text-muted-foreground">
-                      <span>Rate: {formatRate(tax.rate)}</span>
-                      {tax.tax_scope && <span>Scope: {tax.tax_scope}</span>}
-                      <span>Price Include: {tax.price_include ? 'Yes' : 'No'}</span>
+                  <div className="flex items-start gap-3 flex-1">
+                    <Checkbox
+                      checked={selectedIds.includes(tax.id)}
+                      onCheckedChange={() => toggleSelect(tax.id)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">
+                        {tax.odoo_name ? tax.odoo_name : `Tax #${tax.odoo_id}`}
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Odoo ID: {tax.odoo_id} | WooCommerce ID: {tax.woocommerce_id}
+                      </p>
+                      <div className="flex gap-3 mt-2 text-sm text-muted-foreground">
+                        <span>Rate: {formatRate(tax.rate)}</span>
+                        {tax.tax_scope && <span>Scope: {tax.tax_scope}</span>}
+                        <span>Price Include: {tax.price_include ? 'Yes' : 'No'}</span>
+                      </div>
+                      {tax.instance_name && (
+                        <Badge variant="outline" className="mt-2">
+                          <Server className="mr-1 h-3 w-3" />
+                          {tax.instance_name}
+                        </Badge>
+                      )}
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center">
                     {tax.created && (
                       <Badge variant="default" className="bg-green-600">
                         <CheckCircle className="mr-1 h-3 w-3" />
@@ -128,6 +189,15 @@ export default function TaxesSync() {
                         Error
                       </Badge>
                     )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive"
+                      disabled={isDeleting}
+                      onClick={() => handleDeleteOne(tax.id, tax.odoo_name || `Tax #${tax.odoo_id}`)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
