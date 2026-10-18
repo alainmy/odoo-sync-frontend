@@ -547,7 +547,7 @@ export default function Instances() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="product_descriptions">Product Description</Label>
                     <Select
                       value={formData.product_descriptions}
@@ -562,7 +562,7 @@ export default function Instances() {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
