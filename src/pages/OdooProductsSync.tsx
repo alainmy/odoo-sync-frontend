@@ -35,7 +35,17 @@ interface TagsResponse {
   odoo_id: number;
 }
 
+interface CategoryResponse {
+  name: string;
+  odoo_id: number;
+}
+
 interface TagOption {
+  label: string;
+  value: string;
+}
+
+interface CategoryOption {
   label: string;
   value: string;
 }
@@ -101,7 +111,9 @@ const statusVariants = {
 export default function OdooProductsSync() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]); // Para filtrar productos
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]); // Para filtrar productos
   const [tagOptions, setTagOptions] = useState<TagOption[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [page, setPage] = useState(0);
@@ -124,6 +136,7 @@ export default function OdooProductsSync() {
 
   useEffect(() => {
     fetchTags();
+    fetchCategories();
   }, []); // Solo ejecutar una vez al montar el componente
 
   const fetchTags = async () => {
@@ -145,6 +158,26 @@ export default function OdooProductsSync() {
     }
   };
 
+  // Fetch categories
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get(`/api/v1/category-tag-management/categories`);
+      const tags: CategoryResponse[] = response.data.categories;
+      // Convertir tags a opciones para el MultiSelect
+      const options: CategoryOption[] = tags.map(tag => ({
+        label: tag.name,
+        value: tag.odoo_id.toString()
+      }));
+      setCategoryOptions(options);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to load tags',
+      });
+    }
+  };
+
   // Fetch statistics
   const { data: stats } = useQuery<SyncStatsResponse>({
     queryKey: ['attribute-sync-stats'],
@@ -156,7 +189,7 @@ export default function OdooProductsSync() {
   });
   // Fetch products with sync status
   const { data, isLoading, refetch, isFetching } = useQuery<ProductListResponse>({
-    queryKey: ['odoo-products-sync', search, filterStatus, selectedTagIds, page, pageSize],
+    queryKey: ['odoo-products-sync', search, filterStatus, selectedTagIds, selectedCategoryIds, page, pageSize],
     queryFn: async () => {
       const params = new URLSearchParams({
         limit: pageSize.toString(),
@@ -168,6 +201,10 @@ export default function OdooProductsSync() {
       // Agregar tag IDs al filtro
       if (selectedTagIds.length > 0) {
         selectedTagIds.forEach(tagId => params.append('tag_ids', tagId));
+      }
+      // Agregar category IDs al filtro
+      if (selectedCategoryIds.length > 0) {
+        selectedCategoryIds.forEach(categoryId => params.append('category_ids', categoryId));
       }
       try {
 
@@ -431,6 +468,30 @@ export default function OdooProductsSync() {
                   onClick={() => setSelectedTagIds([])}
                 >
                   Clear Tag Filters
+                </Button>
+              )}
+            </div>
+            {/* Filter by Categories */}
+            <div className="flex gap-4 items-center">
+              <div className="flex-1">
+                <MultiSelect
+                  options={categoryOptions}
+                  selected={selectedCategoryIds}
+                  onChange={(categories) => {
+                    setSelectedCategoryIds(categories);
+                    setPage(0); // Reset to first page when filtering
+                  }}
+                  placeholder="Filter by categories..."
+                  className="w-full"
+                />
+              </div>
+              {selectedCategoryIds.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedCategoryIds([])}
+                >
+                  Clear Category Filters
                 </Button>
               )}
             </div>
