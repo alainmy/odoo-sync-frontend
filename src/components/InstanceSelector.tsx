@@ -25,7 +25,7 @@ export function InstanceSelector() {
     instances,
     isLoading,
     fetchInstances,
-    activateInstance
+    selectInstance
   } = useInstanceStore();
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export function InstanceSelector() {
     }
 
     try {
-      await activateInstance(instanceId);
+      await selectInstance(instanceId);
       setOpen(false);
       window.location.reload(); // Recargar la página para reflejar el cambio de instancia
       toast({
@@ -102,28 +102,32 @@ export function InstanceSelector() {
           )}
           <CommandList>
             <CommandGroup>
-              {instances.map((instance) => (
-                <div
-                  className="flex items-center w-full cursor-pointer"
-                  onClick={() => {
-                    handleSelectInstance(instance.id, instance.name)
-                    setOpen(false)
-                  }}
-                >
-                  <Check
-                    className={`mr-2 h-4 w-4 ${instance.id === Number(activeInstance?.id)
-                        ? 'opacity-100'
-                        : 'opacity-0'
-                      }`}
-                  />
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <span className="font-medium truncate">{instance.name}</span>
-                    <span className="text-xs text-muted-foreground truncate">
-                      {instance.woocommerce_url}
-                    </span>
+              {instances.map((instance) => {
+                if(instance.is_active){
+                  return (
+                  <div
+                    className="flex items-center w-full cursor-pointer"
+                    onClick={() => {
+                      handleSelectInstance(instance.id, instance.name)
+                      setOpen(false)
+                    }}
+                  >
+                    <Check
+                      className={`mr-2 h-4 w-4 ${instance.id === Number(activeInstance?.id)
+                          ? 'opacity-100'
+                          : 'opacity-0'
+                        }`}
+                    />
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <span className="font-medium truncate">{instance.name}</span>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {instance.woocommerce_url}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+                }
+              })}
             </CommandGroup>
           </CommandList>
         </Command>

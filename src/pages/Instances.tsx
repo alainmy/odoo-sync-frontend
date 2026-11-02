@@ -99,7 +99,7 @@ export default function Instances() {
     fetchInstances();
     fetchLanguages();
     fetchPriceList();
-    fetchtialIncluded();
+    fetchtialIncluded(odoo_config);
     fetchWebsites(odoo_config);
   }, [fetchInstances, fetchLanguages, fetchPriceList, fetchWebsites,fetchtialIncluded]);
 
@@ -180,28 +180,46 @@ export default function Instances() {
       console.error('Error activating instance:', error);
     }
   };
-
-  const loadJournals = async () => {
+  const handleDesActivate = async (id: number) => {
     try {
-      const response = await fetchOdooJournals('sale')
+      const response = await api.patch(`/api/v1/instances/${id}/desactivate`);
+      console.log(response.data);
+      
+      toast({
+        title: 'Éxito',
+        description: 'Instancia desactivada correctamente'
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Error al desactivar la instancia',
+        variant: 'destructive'
+      });
+      console.error('Error desactivating instance:', error);
+    }
+  };
+
+  const loadJournals = async (odoo_config:OdooConfig) => {
+    try {
+      const response = await fetchOdooJournals('sale',odoo_config);
       setJournals(response.payment_journals ?? [])
     } catch {
       setJournals([])
     }
   }
 
-  const loadCompanies = async () => {
+  const loadCompanies = async (odoo_config:OdooConfig) => {
     try {
-      const response = await fetchOdooCompanies()
+      const response = await fetchOdooCompanies(odoo_config)
       setCompanies(response.companies ?? [])
     } catch {
       setCompanies([])
     }
   }
 
-  const loadtaxes = async () => {
+  const loadtaxes = async (odoo_config:OdooConfig) => {
     try {
-      const response = await fetchtialIncluded();
+      const response = await fetchtialIncluded(odoo_config);
       setTaxes(Array.isArray(response) ? response : [])
     } catch {
       setTaxes([])
@@ -247,10 +265,10 @@ export default function Instances() {
       company_id: instance.company_id ?? null,
       tax_included_id: instance.tax_included_id ?? null
     });
-    loadJournals();
-    loadCompanies();
+    loadJournals(odooConfig);
+    loadCompanies(odooConfig);
     setIsDialogOpen(true);
-    loadtaxes();
+    loadtaxes(odooConfig);
   };
 
   const resetForm = () => {
@@ -278,9 +296,9 @@ export default function Instances() {
 
   const openNewDialog = () => {
     resetForm();
-    loadJournals();
-    loadCompanies();
-    loadtaxes();
+    loadJournals(odoo_config);
+    loadCompanies(odoo_config);
+    loadtaxes(odoo_config);
     setIsDialogOpen(true);
   };
 
@@ -658,6 +676,16 @@ export default function Instances() {
                     >
                       <Check className="h-4 w-4 mr-1" />
                       Activate
+                    </Button>
+                  )}
+                  {instance.is_active && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDesActivate(instance.id)}
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      Desactivate
                     </Button>
                   )}
                   <Button

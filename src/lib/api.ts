@@ -13,6 +13,10 @@ export const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token')
+    const active_instance = localStorage.getItem("active_instance_id");
+    if(active_instance){
+      config.headers.ActiveInstance = active_instance;
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }

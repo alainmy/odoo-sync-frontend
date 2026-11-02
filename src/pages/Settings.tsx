@@ -51,6 +51,7 @@ export default function Settings() {
     const fetchData = async () => {
       setLoading(true);
       try {
+        console.log('as');
         await fetchActiveInstance();
       } catch (error) {
         toast({

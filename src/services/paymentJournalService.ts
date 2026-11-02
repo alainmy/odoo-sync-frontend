@@ -1,9 +1,9 @@
 import api from '@/lib/api'
 
-export const fetchOdooJournals = async (type: string | null = null) => {
+export const fetchOdooJournals = async (type: string | null = null,odoo_config: any | null= null) => {
   var uri = '/odoo/journals';
    if (type) {
-    const response = await api.get(`${uri}?type=${type}`);
+    const response = await api.post(`${uri}?type=${type}`,odoo_config);
     console.log(response.data);
     return response.data;
     }

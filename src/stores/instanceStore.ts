@@ -75,10 +75,11 @@ interface InstanceState {
   fetchInstances: () => Promise<void>;
   fetchActiveInstance: () => Promise<void>;
   activateInstance: (id: number) => Promise<void>;
+  selectInstance: (id: number) => Promise<void>;
   activateWebsite: (id: number) => Promise<void>;
   clearInstances: () => void;
   fetchLanguages: () => Promise<void>;
-  fetchtialIncluded: () => Promise<TaxIncluded[]>;
+  fetchtialIncluded: (odoo_config: OdooConfig) => Promise<TaxIncluded[]>;
   fetchPriceList: () => Promise<void>;
   fetchWebsites: (odoo_config: OdooConfig) => Promise<void>;
 }
@@ -98,6 +99,7 @@ export const useInstanceStore = create<InstanceState>()(
       odooConfig: null,
 
       setActiveInstance: (instance) => {
+
         set({ activeInstance: instance });
         set({ activeWebsite: instance ? instance?.website : null });
         var website_id = instance ? instance?.website?.id : null;
@@ -177,14 +179,27 @@ export const useInstanceStore = create<InstanceState>()(
           });
         }
       },
-      fetchtialIncluded: async (): Promise<TaxIncluded[]> => {
+      fetchtialIncluded: async (odoo_config: OdooConfig): Promise<TaxIncluded[]> => {
         set({ isLoading: true, error: null });
         try {
-          const response = await api.get(`/api/v1/sync-management/taxes?only_included=true`);
-          const taxes_inluded = Array.isArray(response.data?.taxes) ? response.data.taxes : [];
-          set({ isLoading: false, taxes_inluded });
-          console.log(taxes_inluded);
-          return taxes_inluded;
+
+          if (odoo_config.url && odoo_config.db && odoo_config.username && odoo_config.password) {
+              const params = {
+                odoo_url:odoo_config.url,
+                odoo_db:odoo_config.db,
+                odoo_username: odoo_config.username,
+                odoo_password: odoo_config.password
+              }
+              const response = await api.get(`/api/v1/sync-management/taxes?only_included=true`,{
+                params: params
+              });
+              const taxes_inluded = Array.isArray(response.data?.taxes) ? response.data.taxes : [];
+              set({ isLoading: false, taxes_inluded });
+              console.log(taxes_inluded);
+              return taxes_inluded;
+          }
+          return [];
+          
         } catch (error: any) {
           console.error('Error fetching tax included:', error);
           set({
@@ -262,12 +277,24 @@ export const useInstanceStore = create<InstanceState>()(
           set({ instances, isLoading: false });
 
           // Encontrar y establecer la instancia activa
-          const active = instances.find((i: WooCommerceInstance) => i.is_active);
-          if (active) {
+          const instanceActiveId = localStorage.getItem("active_instance_id");
+          let instanceToInt: number | null = null;
+          if (instanceActiveId !== null) {
+            instanceToInt = parseInt(instanceActiveId, 10);
+          }
+          const active = instances.find((i: WooCommerceInstance) => (i.is_active && instanceToInt == i.id));
+          
+          if (active && instanceToInt == active.id) {
             get().setActiveInstance(active);
           } else {
-            set({ activeInstance: null });
-            localStorage.removeItem('active_instance_id');
+            if(active && instanceToInt == null){
+              get().setActiveInstance(active);
+            }
+            else{
+              set({ activeInstance: null });
+              localStorage.removeItem('active_instance_id');
+            }
+            
           }
         } catch (error: any) {
           console.error('Error fetching instances:', error);
@@ -286,14 +313,19 @@ export const useInstanceStore = create<InstanceState>()(
       fetchActiveInstance: async () => {
         set({ isLoading: true, error: null });
         try {
-          const response = await api.get('/api/v1/instances/active');
-          const instance = response.data;
-
-          get().setActiveInstance(instance);
-          if (instance.website) {
-            get().setActiveWebsite(instance.website);
-          }
+          // const response = await api.get('/api/v1/instances/active');
+          // const instance = response.data;
+          const instance = get().activeInstance;
+          if(instance){
+            const response = await api.get(`/api/v1/instances/${instance.id}`)
+            const inst = response.data;
+            get().setActiveInstance(inst);
+            if (instance.website) {
+              get().setActiveWebsite(instance.website);
+            }
           set({ isLoading: false });
+          }
+          
         } catch (error: any) {
           console.error('Error fetching active instance:', error);
           set({
@@ -309,6 +341,39 @@ export const useInstanceStore = create<InstanceState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await api.patch(`/api/v1/instances/${id}/activate`);
+          const activatedInstance = response.data;
+
+          // Actualizar la instancia activa
+          get().setActiveInstance(activatedInstance);
+          if (activatedInstance.website) {
+            get().setActiveWebsite(activatedInstance.website);
+          }
+          // Actualizar la lista de instancias localmente
+          const updatedInstances = get().instances.map(instance => ({
+            ...instance,
+            is_active: instance.id === id
+          }));
+
+          set({ instances: updatedInstances, isLoading: false });
+
+          // Emitir evento para sincronización entre pestañas
+          window.dispatchEvent(new CustomEvent('instance-changed', {
+            detail: { instanceId: id }
+          }));
+
+        } catch (error: any) {
+          console.error('Error activating instance:', error);
+          set({
+            error: error.response?.data?.detail || 'Error al activar instancia',
+            isLoading: false
+          });
+          throw error;
+        }
+      },
+      selectInstance: async (id: number) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await api.get(`/api/v1/instances/${id}`);
           const activatedInstance = response.data;
 
           // Actualizar la instancia activa
