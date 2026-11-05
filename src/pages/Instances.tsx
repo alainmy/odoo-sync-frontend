@@ -48,6 +48,8 @@ interface FormData {
   odoo_journal_id: number | null;
   company_id: number | null;
   tax_included_id: number | null;
+  andreani_key: string | '';
+  andreani_base_url: string | '';
 }
 interface OdooConfig {
   url: string;
@@ -92,6 +94,8 @@ export default function Instances() {
     odoo_journal_id: null,
     company_id: null,
     tax_included_id: null,
+    andreani_key: '',
+    andreani_base_url: ''
   });
   const { toast } = useToast();
 
@@ -263,7 +267,9 @@ export default function Instances() {
       website_id: instance.website_id,
       odoo_journal_id: instance.odoo_journal_id ?? null,
       company_id: instance.company_id ?? null,
-      tax_included_id: instance.tax_included_id ?? null
+      tax_included_id: instance.tax_included_id ?? null,
+      andreani_key: instance.andreani_key ?? '',
+      andreani_base_url: instance.andreani_base_url ?? '',
     });
     loadJournals(odooConfig);
     loadCompanies(odooConfig);
@@ -291,6 +297,8 @@ export default function Instances() {
       odoo_journal_id: null,
       company_id: null,
       tax_included_id: null,
+      andreani_key: '',
+      andreani_base_url: ''
     });
   };
 
@@ -367,6 +375,28 @@ export default function Instances() {
                       type="password"
                       value={formData.woocommerce_consumer_secret}
                       onChange={(e) => setFormData({ ...formData, woocommerce_consumer_secret: e.target.value })}
+                      placeholder="cs_..."
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="wc_secret">Andreani Key</Label>
+                    <Input
+                      id="wc_secret"
+                      type="password"
+                      value={formData.andreani_key}
+                      onChange={(e) => setFormData({ ...formData, andreani_key: e.target.value })}
+                      placeholder="cs_..."
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="wc_secret">Andreani Base Url</Label>
+                    <Input
+                      id="wc_secret"
+                      type="password"
+                      value={formData.andreani_base_url}
+                      onChange={(e) => setFormData({ ...formData, andreani_base_url: e.target.value })}
                       placeholder="cs_..."
                       required
                     />

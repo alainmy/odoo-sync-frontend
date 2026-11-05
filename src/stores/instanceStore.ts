@@ -29,6 +29,8 @@ export interface WooCommerceInstance {
   odoo_journal_id: number | null;
   company_id: number | null;
   tax_included_id: number | null;
+  andreani_key: string | '';
+  andreani_base_url: string | '';
 }
 export interface Language {
   code: string;
