@@ -8,7 +8,7 @@ export const fetchOdooJournals = async (type: string | null = null,odoo_config: 
     return response.data;
     }
     else {
-      const response = await api.get(uri);
+      const response = await api.post(uri,odoo_config);
       return response.data;
     }
 }
